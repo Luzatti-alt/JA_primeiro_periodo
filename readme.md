@@ -1,0 +1,14 @@
+# projeto jornade de aprendizagem 1:
+## ideias gerais:
+- inventário interno 
+- automatizar alertas de trocas e vencimentos (Lucas)
+- vender a parte de metal do cinto
+- vender a parte têxtil do cinto
+- novos fornecedores, talvez?
+## requerimentos
+- SQLAlchemy                   2.0.43
+- pyinstaller                  6.15.0
+- pyinstaller-hooks-contrib    2025.8
+- PySide6                      6.10.2
+- PySide6_Addons               6.10.2
+- PySide6_Essentials           6.10.2
