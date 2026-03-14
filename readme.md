@@ -1,4 +1,15 @@
 # projeto jornade de aprendizagem 1:
+## temas:
+- estruturar o correto fluxo de descarte de Equipamentos de Proteção Individual (EPI) → regulamentações em vigor
+- implementar registros eletrônicos ou físicos → evidência das movimentações e descarte
+    Indústria parceira:[Guindastes Ribas LTDA](https://www.guindastesribas.com/)
+
+## documentação
+canvas base:
+![[PROJECT-MODEL-CANVAS-modelo-A3-em-branco.png]]
+**implementar/add atalhos via md do que faltou**
+
+
 ## ideias gerais:
 - inventário interno 
 - automatizar alertas de trocas e vencimentos (Lucas)
