@@ -6,7 +6,7 @@
 
 ## documentação
 canvas base:
-![[PROJECT-MODEL-CANVAS-modelo-A3-em-branco.png]]
+![Canvas base](./PROJECT-MODEL-CANVAS-modelo-A3-em-branco.png)
 **implementar/add atalhos via md do que faltou**
 
 
