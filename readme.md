@@ -2,7 +2,7 @@
 ## temas:
 - estruturar o correto fluxo de descarte de Equipamentos de Proteção Individual (EPI) → regulamentações em vigor
 - implementar registros eletrônicos ou físicos → evidência das movimentações e descarte
-    Indústria parceira:[Guindastes Ribas LTDA](https://www.guindastesribas.com/)
+    Indústria parceira: [Guindastes Ribas LTDA](https://www.guindastesribas.com/)
 
 ## documentação
 canvas base:
