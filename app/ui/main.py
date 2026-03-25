@@ -53,6 +53,7 @@ class Inventario_ui(QWidget):
     def __init__ (self):
         super().__init__()
         self.setWindowTitle("sistema de inventario")
+        self.setWindowIcon(QIcon("app/src/ui/imgs/ideia_de_logo_app_JA.png"))
         #topo ui
         topo_layout = QHBoxLayout()
         add_item =  QPushButton("Adicionar do inventario")
