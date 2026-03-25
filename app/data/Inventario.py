@@ -7,12 +7,6 @@ engine = create_engine('sqlite:///GuindastesRibasDB.db', echo=True)
 Base = declarative_base()
 
 #region DB_config
-class Inventario(Base):
-    __tablename__ = 'inventario'
-
-    id = Column(Integer, primary_key=True)
-    itens = relationship("Itens", back_populates="inventario")
-
 
 class Itens(Base):
     __tablename__ = 'itens'
@@ -30,7 +24,22 @@ class Itens(Base):
     inventario_id = Column(Integer, ForeignKey("inventario.id"))
     inventario = relationship("Inventario", back_populates="itens")
 #endregion
+class Inventario(Base):
+    __tablename__ = 'inventario'
 
+    id = Column(Integer, primary_key=True)
+    itens = relationship("Itens", back_populates="inventario")
+
+    def __init__(self):
+        pass
+    def add_item(self): #add class de itens_como tipo
+        pass
+    def rem_item(self):
+        pass
+    def edit_item(self):
+        pass
+    def Itens_totais(self):
+        return session.query(Itens).all()
 
 # criar sessão ANTES de usar
 Session = sessionmaker(bind=engine)
@@ -40,7 +49,7 @@ session = Session()
 #region fake_data
 def fake_data():
     try:
-        inv = Inventario()
+        inv = Itens()
         session.add(inv)
 
         for i in range(3):
