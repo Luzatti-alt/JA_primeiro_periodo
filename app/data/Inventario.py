@@ -1,3 +1,4 @@
+from requests import session
 from sqlalchemy import create_engine, Column, Integer, String, JSON, Boolean, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import date
@@ -39,7 +40,11 @@ class Inventario(Base):
     def edit_item(self):
         pass
     def Itens_totais(self):
-        return session.query(Itens).all()
+        itens = session.query(Itens).all()
+        for item in itens:
+            if item.usos:
+                item.usos = ", ".join(item.usos)  # "uso 1, uso 3"
+        return itens
 
 # criar sessão ANTES de usar
 Session = sessionmaker(bind=engine)
@@ -49,10 +54,10 @@ session = Session()
 #region fake_data
 def fake_data():
     try:
-        inv = Itens()
+        inv = Inventario()
         session.add(inv)
 
-        for i in range(3):
+        for i in range(90):
             novo_item = Itens(
                 ca=f"ca {i}",
                 cod_unico=f"cod {i}",
