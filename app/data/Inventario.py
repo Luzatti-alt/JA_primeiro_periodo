@@ -121,9 +121,9 @@ def fake_data():
         session.rollback()
         print(f'Erro ao criar dados de debug: {e}')
 #endregion
-fake_data()
-Base.metadata.create_all(engine)
-fake_data()
+Base.metadata.create_all(engine)  
+Session = sessionmaker(bind=engine)
+session = Session()
 if __name__ == '__main__':
     #auto atualizar o db
     if os.path.exists('GuindastesRibasDB.db'):
