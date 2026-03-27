@@ -2,13 +2,16 @@ from sqlalchemy import create_engine, Column, Integer, String, JSON, Boolean, Fo
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import date
 import os
+import sys
 
 # config BD
 Base = declarative_base()
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if getattr(sys, 'frozen', False):
+    BASE_DIR = os.path.dirname(sys.executable)  # pasta do .exe
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(BASE_DIR, "GuindastesRibasDB.db")
 engine = create_engine(f'sqlite:///{db_path}', echo=True)
-Base.metadata.create_all(engine)
 #region DB_config
 
 class Itens(Base):
@@ -118,8 +121,9 @@ def fake_data():
         session.rollback()
         print(f'Erro ao criar dados de debug: {e}')
 #endregion
-
-
+fake_data()
+Base.metadata.create_all(engine)
+fake_data()
 if __name__ == '__main__':
     #auto atualizar o db
     if os.path.exists('GuindastesRibasDB.db'):

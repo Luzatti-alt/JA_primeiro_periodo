@@ -1,1 +1,1 @@
-pyinstaller --onefile --windowed --add-data "app/ui/imgs;app/ui/imgs" app/ui/main.py
+ python3.13 -m PyInstaller --onedir --windowed --add-data "app/ui/imgs;app/ui/imgs" --add-data "app/data;data" --hidden-import sqlalchemy --hidden-import pyside6 app/ui/main.py

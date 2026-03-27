@@ -6,8 +6,10 @@ import sys
 import json
 from pathlib import Path
 # Adiciona o diretório raiz do projeto ao path e permite usar partes/modulos dcleare outras pastas do projeto
-root = Path(__file__).parent.parent  # root da pasta app
-sys.path.insert(0, str(root))
+if getattr(sys, 'frozen', False):
+    root = Path(sys._MEIPASS)
+else:
+    root = Path(__file__).parent.parent
 from data.Inventario import Inventario,Itens #criar init.py para reconhecer modulo
 #configuração para compilar em executavel
 def resource_path(relative_path):
