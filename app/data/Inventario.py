@@ -2,6 +2,7 @@ from requests import session
 from sqlalchemy import create_engine, Column, Integer, String, JSON, Boolean, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import date
+import os
 
 # config BD
 engine = create_engine('sqlite:///GuindastesRibasDB.db', echo=True)
@@ -13,6 +14,8 @@ class Itens(Base):
     __tablename__ = 'itens'
 
     id = Column(Integer, primary_key=True)
+    Visivel = Column(Boolean,default=True)#qnd "excluir" so ira fazer com que nao apareca
+    #isso por 6 meses 1²anos algo assim dps disso não precisaria do dado de qualquer forma
     ca = Column(String)
     cod_unico = Column(String)
     tipo_epi = Column(String)
@@ -27,23 +30,50 @@ class Itens(Base):
 #endregion
 class Inventario(Base):
     __tablename__ = 'inventario'
-
     id = Column(Integer, primary_key=True)
     itens = relationship("Itens", back_populates="inventario")
-
     def __init__(self):
         pass
-    def add_item(self): #add class de itens_como tipo
+    def add_item(self, ca, tipo_epi, dono, usos, data_descarte, data_devolucao): #add class de itens_como tipo
+        inv = session.query(Inventario).first()
+        NovoItemInventario = Itens(
+            ca=ca,
+            tipo_epi=tipo_epi,
+            dono=dono,
+            usos=usos,
+            data_descarte=data_descarte,
+            data_devolucao=data_devolucao,
+            Visivel=True,
+            descartado=False,
+            inventario=inv
+            )
+        session.add(NovoItemInventario)
+        session.commit()
+    def rem_item(self,id):
+        itens = session.query(Itens).filter_by(id=id).all()
+        if itens:
+            item = itens[0]
+            item.Visivel = False
+            session.commit()
         pass
-    def rem_item(self):
-        pass
+    def RemListaFuncionarios(self):
+        itens = session.query(Itens).filter_by(Visivel=True).all()
+        #criar listas separadas e juntar com zip desorderna isso
+        return [(item.id, item.dono) for item in itens]#nova lista mantendo ordem
     def edit_item(self):
         pass
+    def EditListaFuncionarios(self):
+        itens = session.query(Itens).filter_by(Visivel=True).all()
+        #criar listas separadas e juntar com zip desorderna isso
+        return [(item.id, item.dono) for item in itens]#nova lista mantendo ordem
     def Itens_totais(self):
-        itens = session.query(Itens).all()
+        #somente os visiveis
+        itens = session.query(Itens).filter_by(Visivel=True).all()
         for item in itens:
-            if item.usos:
-                item.usos = ", ".join(item.usos)  # "uso 1, uso 3"
+            if isinstance(item.usos, list):
+                item.usos_formatado = ", ".join(item.usos)#uso 1 , uso 2
+            else:
+                item.usos_formatado = str(item.usos)
         return itens
 
 # criar sessão ANTES de usar
@@ -57,7 +87,7 @@ def fake_data():
         inv = Inventario()
         session.add(inv)
 
-        for i in range(90):
+        for i in range(10):
             novo_item = Itens(
                 ca=f"ca {i}",
                 cod_unico=f"cod {i}",
@@ -80,5 +110,8 @@ def fake_data():
 
 
 if __name__ == '__main__':
+    #auto atualizar o db
+    if os.path.exists('GuindastesRibasDB.db'):
+        os.remove('GuindastesRibasDB.db')
     Base.metadata.create_all(engine)
     fake_data()
