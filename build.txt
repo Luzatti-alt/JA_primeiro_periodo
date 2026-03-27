@@ -1,0 +1,1 @@
+pyinstaller --onefile --windowed --add-data "app/ui/imgs;app/ui/imgs" app/ui/main.py
