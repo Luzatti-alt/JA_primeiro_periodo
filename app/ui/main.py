@@ -152,22 +152,21 @@ class Inventario_ui(QWidget):
         indentificacao_layout = QVBoxLayout()
 
         self.scroll_content = QWidget()
-        self.lista_itens_layout = QVBoxLayout(self.scroll_content)
         scroll_area = QScrollArea()
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scroll_area.setWidgetResizable(True)
         scroll_area.setFixedHeight(5 * 80)  # ~ 5 linhas
-        lista_itens_layout = QVBoxLayout(self.scroll_content)
-        lista_itens_layout.setSpacing(10)
-        lista_itens_layout.setContentsMargins(0, 0, 0, 0)
+        self.lista_itens_layout = QVBoxLayout(self.scroll_content)
+        self.lista_itens_layout.setSpacing(10)
+        self.lista_itens_layout.setContentsMargins(0, 0, 0, 0)
         db_itens = Inventario().Itens_totais()
         for item in db_itens:
               linha = self.criar_linha_item(item)
               linha.setFixedHeight(78)  # altura fixa por linha
-              lista_itens_layout.addWidget(linha)
-        lista_itens_layout.addStretch()  # empurra itens pro topo
-        self.scroll_content.setLayout(lista_itens_layout)
+              self.lista_itens_layout.addWidget(linha)
+        self.lista_itens_layout.addStretch()  # empurra itens pro topo
+        self.scroll_content.setLayout(self.lista_itens_layout)
         scroll_area.setWidget(self.scroll_content)
 
 
@@ -249,7 +248,7 @@ class Inventario_ui(QWidget):
         layout.addWidget(col(str(item.id), COL_ID))#conversao necessaria int -> str
         layout.addWidget(col(item.dono, COL_DONO))
         layout.addWidget(col(item.cod_unico, COL_COD))
-        layout.addWidget(col(str(item.usos), COL_USOS))
+        layout.addWidget(col(item.usos_formatado, COL_USOS))
         layout.addWidget(col(item.data_devolucao, COL_DEVO))
         layout.addWidget(col(item.data_descarte, COL_DESC))
 
@@ -298,10 +297,10 @@ class GerenciadorInventario(QWidget):
         self.Irhistorico = historico
 
         # botões fixos do topo
-        self.InventarioBotao    = QPushButton("Inventário")
-        self.btn_add       = QPushButton("Adicionar")
-        self.btn_rem       = QPushButton("Remover")
-        self.btn_edit      = QPushButton("Editar")
+        self.InventarioBotao = QPushButton("Inventário")
+        self.btn_add = QPushButton("Adicionar")
+        self.btn_rem = QPushButton("Remover")
+        self.btn_edit = QPushButton("Editar")
         self.btn_historico = QPushButton("Historico")
         
         self.InventarioBotao.clicked.connect(self.IrInventario)
@@ -393,29 +392,85 @@ class GerenciadorInventario(QWidget):
         Inventario().rem_item(item_id)
         VoltarInventario = self.IrInventario
         VoltarInventario()
+
     def edit(self):
         self._limpar_conteudo()
+        self.EditUi = QVBoxLayout()
+        selecionar = QWidget()
+        selecionar_layout = QFormLayout(selecionar)
         #"select de funcionario"
-        ListaFuncionario = QComboBox() #itera de 
-        DBListaFuncionarios=Inventario().RemListaFuncionarios()
-        ListaFuncionario.addItems([f"ID: {id} nome: {nome} "for id,nome in DBListaFuncionarios])
-        self.conteudo_layout.addWidget(ListaFuncionario)
+        self.ListaFuncionario = QComboBox()
+        DBListaFuncionarios = Inventario().RemListaFuncionarios()
+        self.ListaFuncionario.addItems(
+            [f"ID: {id} nome: {nome}" for id, nome in DBListaFuncionarios]
+        )
+        SelecionarBotao = QPushButton("Selecionar")
+        SelecionarBotao.clicked.connect(self.selecionar_edicao)
         EditBotao = QPushButton("Editar")
-        self.conteudo_layout.addWidget(EditBotao)
-        
+        EditBotao.clicked.connect(self.confirmar_edicao)
+        selecionar_layout.addRow("Funcionário:", self.ListaFuncionario)
+        selecionar_layout.addRow(SelecionarBotao)
+        self.EditUi.addWidget(selecionar)
+        #parte escondida até selecionar
+        self.form = QWidget()
+        self.form.hide()
+        self.EditUi.addWidget(self.form)
+        self.form_layout = QFormLayout(self.form)
+        self.form_layout.setSpacing(10)
+    
+        self.input_ca = QLineEdit()
+        self.input_tipo = QLineEdit()
+        self.input_dono = QLineEdit()
+        self.input_usos = QLineEdit()
+        self.input_devolucao = QDateEdit()
+        self.input_devolucao.setCalendarPopup(True)
+        self.input_devolucao.setDate(QDate.currentDate())
+        self.input_descarte = QDateEdit()
+        self.input_descarte.setCalendarPopup(True)
+        self.input_descarte.setDate(QDate.currentDate())
+
+        self.form_layout.addRow("CA:",self.input_ca)
+        self.form_layout.addRow("Tipo de EPI:",self.input_tipo)
+        self.form_layout.addRow("Responsável:",self.input_dono)
+        self.form_layout.addRow("Usos:",self.input_usos)
+        self.form_layout.addRow("Data devolução:",self.input_devolucao)
+        self.form_layout.addRow("Data descarte:",self.input_descarte)
+        #
+        self.EditUi.addWidget(EditBotao)
+        self.conteudo_layout.addLayout(self.EditUi)
+    def selecionar_edicao(self):
+        texto = self.ListaFuncionario.currentText()
+        item_id = int(texto.split("ID: ")[1].split(" ")[0])
+        item = Inventario().SelFuncionario(item_id)
+        if item:
+            self.input_ca.setText(item.ca)
+            self.input_tipo.setText(item.tipo_epi)
+            self.input_dono.setText(item.dono)
+            self.input_usos.setText(item.usos_formatado)
+        self.form.show()
+    def confirmar_edicao(self):
+        texto = self.ListaFuncionario.currentText()
+        self.item_id_edicao = int(texto.split("ID: ")[1].split(" ")[0])
+        Inventario().edit_item(
+            self.item_id_edicao,
+            self.input_ca.text(),
+            self.input_tipo.text(),
+            self.input_dono.text(),
+            self.input_usos.text().split(","),
+            str(self.input_devolucao.date().toPython()),
+            str(self.input_descarte.date().toPython())
+        )
+        self.IrInventario() 
 
     def atualizar_tipo(self, tipo):
         # reseta visibilidade
         for btn in [self.btn_add, self.btn_rem, self.btn_edit]:
             btn.setVisible(True)
-
         acoes = {"add": self.add, "rem": self.rem, "edit": self.edit}
         esconder = {"add": self.btn_add, "rem": self.btn_rem, "edit": self.btn_edit}
-
         if tipo in acoes:
             esconder[tipo].setVisible(False)
             acoes[tipo]()  #chama tela especifica
-
         self.setWindowTitle({"add": "Adicionar", "rem": "Remover", "edit": "Editar"}.get(tipo, ""))
 #endregion gerenciador de inventario
 #iniciando janela

@@ -60,8 +60,19 @@ class Inventario(Base):
         itens = session.query(Itens).filter_by(Visivel=True).all()
         #criar listas separadas e juntar com zip desorderna isso
         return [(item.id, item.dono) for item in itens]#nova lista mantendo ordem
-    def edit_item(self):
-        pass
+    def SelFuncionario(self,ID):
+        return session.query(Itens).filter_by(id=ID).first()
+    def edit_item(self, id, ca, tipo_epi, dono, usos, data_dev, data_desc):
+        item = session.query(Itens).filter_by(id=id).first()
+        if item:
+            item.ca = ca
+            item.tipo_epi = tipo_epi
+            item.dono = dono
+            item.usos = usos
+            item.data_devolucao = data_dev
+            item.data_descarte = data_desc
+            session.commit()
+        
     def EditListaFuncionarios(self):
         itens = session.query(Itens).filter_by(Visivel=True).all()
         #criar listas separadas e juntar com zip desorderna isso
