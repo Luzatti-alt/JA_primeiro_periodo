@@ -1,13 +1,14 @@
-from requests import session
 from sqlalchemy import create_engine, Column, Integer, String, JSON, Boolean, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import date
 import os
 
 # config BD
-engine = create_engine('sqlite:///GuindastesRibasDB.db', echo=True)
 Base = declarative_base()
-
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(BASE_DIR, "GuindastesRibasDB.db")
+engine = create_engine(f'sqlite:///{db_path}', echo=True)
+Base.metadata.create_all(engine)
 #region DB_config
 
 class Itens(Base):
@@ -123,5 +124,5 @@ if __name__ == '__main__':
     #auto atualizar o db
     if os.path.exists('GuindastesRibasDB.db'):
         os.remove('GuindastesRibasDB.db')
-    Base.metadata.create_all(engine)
     fake_data()
+    Base.metadata.create_all(engine)

@@ -9,6 +9,10 @@ from pathlib import Path
 root = Path(__file__).parent.parent  # root da pasta app
 sys.path.insert(0, str(root))
 from data.Inventario import Inventario,Itens #criar init.py para reconhecer modulo
+#configuração para compilar em executavel
+def resource_path(relative_path):
+    base = getattr(sys, '_MEIPASS', Path(__file__).parent.parent.parent)
+    return str(Path(base) / relative_path)
 #configurando base da gui
 app = QApplication(sys.argv)
 paleta = QPalette()
@@ -33,25 +37,24 @@ app.setStyleSheet(f"""
                     border: 2px solid {paleta_cores['botao']};
                     border-radius: 3px;
                     background-color: {paleta_cores['botao']};
-                    image: url(app/ui/imgs/check-nao.png);
+                    image: url({resource_path('app/ui/imgs/check-nao.png')});
                     }}
                   QCheckBox::indicator:checked {{
                     background-color: {paleta_cores['texto']};
                     border: 2px solid {paleta_cores['texto']};
-                    image: url(app/ui/imgs/check-ok.png);
+                    image: url({resource_path('app/ui/imgs/check-ok.png')});
     }}
 """)#trocar icon
 imagens = {
     "capacete": "imagens/capacete.png"
 }
-
 #region gerenciador de janelas
 #gerenciador interfaces graficas
 class Gerenciador_janelas(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("sistema de inventario")
-        self.setWindowIcon(QIcon("app/ui/imgs/ideia_de_logo_app_JA.png"))
+        self.setWindowIcon(QIcon(resource_path("app/ui/imgs/ideia_de_logo_app_JA.png")))
         self.historico_navegacao = []
         self.stacked = QStackedWidget()
         self.Inventario = Inventario_ui(voltar=self.voltar, historico=self.IrHistorico, gerenciar=self.IrGerenciarInventario)
@@ -215,7 +218,7 @@ class Inventario_ui(QWidget):
 
         # imagem
         img_label = QLabel()
-        img_label.setPixmap(QPixmap('app/ui/imgs/capacete-icon.png'))
+        img_label.setPixmap(QPixmap(resource_path('app/ui/imgs/capacete-icon.png')))
         img_label.setScaledContents(True)
         img_label.setFixedSize(48, 60)
         img_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
