@@ -50,6 +50,8 @@ imagens = {
 class Gerenciador_janelas(QWidget):
     def __init__(self):
         super().__init__()
+        self.setWindowTitle("sistema de inventario")
+        self.setWindowIcon(QIcon("app/ui/imgs/ideia_de_logo_app_JA.png"))
         self.historico_navegacao = []
         self.stacked = QStackedWidget()
         self.Inventario = Inventario_ui(voltar=self.voltar, historico=self.IrHistorico, gerenciar=self.IrGerenciarInventario)
@@ -89,8 +91,6 @@ class Gerenciador_janelas(QWidget):
 class Inventario_ui(QWidget):
     def __init__ (self,voltar,historico, gerenciar):
         super().__init__()
-        self.setWindowTitle("sistema de inventario")
-        self.setWindowIcon(QIcon("app/ui/imgs/ideia_de_logo_app_JA.png"))
         #topo ui
         topo_layout = QHBoxLayout()
         add_item =  QPushButton("Adicionar do inventario")
@@ -268,7 +268,6 @@ class Inventario_ui(QWidget):
 class Historico_ui(QWidget):
     def __init__(self,Inventario, gerenciar):
         super().__init__()
-        self.setWindowTitle("historico do inventario")
         VoltarBotao = QPushButton("Inventario")
         VoltarBotao.clicked.connect(Inventario)
         topo_layout = QHBoxLayout()
@@ -330,6 +329,8 @@ class GerenciadorInventario(QWidget):
             item = self.conteudo_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
+            elif item.layout():
+                self._limpar_layout(item.layout())
 
     def add(self):
         self._limpar_conteudo()
@@ -471,7 +472,7 @@ class GerenciadorInventario(QWidget):
         if tipo in acoes:
             esconder[tipo].setVisible(False)
             acoes[tipo]()  #chama tela especifica
-        self.setWindowTitle({"add": "Adicionar", "rem": "Remover", "edit": "Editar"}.get(tipo, ""))
+
 #endregion gerenciador de inventario
 #iniciando janela
 window = Gerenciador_janelas()

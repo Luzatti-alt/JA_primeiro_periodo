@@ -24,9 +24,14 @@ class Itens(Base):
     data_descarte = Column(String)
     data_devolucao = Column(String)
     descartado = Column(Boolean)
-
     inventario_id = Column(Integer, ForeignKey("inventario.id"))
     inventario = relationship("Inventario", back_populates="itens")
+    #decorator para funcionar melhor
+    @property
+    def usos_formatado(self):
+        if isinstance(self.usos, list):
+            return ", ".join(self.usos)
+        return str(self.usos) if self.usos else ""
 #endregion
 class Inventario(Base):
     __tablename__ = 'inventario'
@@ -79,13 +84,7 @@ class Inventario(Base):
         return [(item.id, item.dono) for item in itens]#nova lista mantendo ordem
     def Itens_totais(self):
         #somente os visiveis
-        itens = session.query(Itens).filter_by(Visivel=True).all()
-        for item in itens:
-            if isinstance(item.usos, list):
-                item.usos_formatado = ", ".join(item.usos)#uso 1 , uso 2
-            else:
-                item.usos_formatado = str(item.usos)
-        return itens
+        return session.query(Itens).filter_by(Visivel=True).all()
 
 # criar sessão ANTES de usar
 Session = sessionmaker(bind=engine)
