@@ -383,10 +383,10 @@ class GerenciadorInventario(QWidget):
         self.ListaFuncionario = QComboBox() #itera de 
         DBListaFuncionarios=Inventario().RemListaFuncionarios()
         self.ListaFuncionario.addItems([f"ID: {id} nome: {nome} "for id,nome in DBListaFuncionarios])
-        self.conteudo_layoutHorizontal.addWidget(self.ListaFuncionario)
+        self.conteudo_layout.addWidget(self.ListaFuncionario)
         RemBotao = QPushButton("remover item")
         RemBotao.clicked.connect(self.confirmar_rem)
-        self.conteudo_layoutHorizontal.addWidget(RemBotao)
+        self.conteudo_layout.addWidget(RemBotao)
     def confirmar_rem(self):
         texto = self.ListaFuncionario.currentText()
         item_id = int(texto.split("ID: ")[1].split(" ")[0])  # extrai o id do texto
@@ -399,9 +399,9 @@ class GerenciadorInventario(QWidget):
         ListaFuncionario = QComboBox() #itera de 
         DBListaFuncionarios=Inventario().RemListaFuncionarios()
         ListaFuncionario.addItems([f"ID: {id} nome: {nome} "for id,nome in DBListaFuncionarios])
-        self.conteudo_layoutHorizontal.addWidget(ListaFuncionario)
+        self.conteudo_layout.addWidget(ListaFuncionario)
         EditBotao = QPushButton("Editar")
-        self.conteudo_layoutHorizontal.addWidget(EditBotao)
+        self.conteudo_layout.addWidget(EditBotao)
         
 
     def atualizar_tipo(self, tipo):
