@@ -31,6 +31,9 @@ paleta.setColor(QPalette.ColorRole.Window, QColor(paleta_cores["fundo"]))
 app.setPalette(paleta)
 #stylesheet do app
 app.setStyleSheet(f"""
+                  QLabel{{
+                  color: #ffffff;
+                  }}
                   QPushButton {{
                   background-color: {paleta_cores['botao']};color: {paleta_cores['texto']
                   }}}
@@ -82,7 +85,7 @@ class Gerenciador_janelas(QWidget):
     def IrHistorico(self):
         self.ir_para(self.Historico)
     def IrInventario(self):
-        self.Inventario.AtualizarLista()#recarregar o db sempre
+        self.Inventario.AtualizarListaItens()#recarregar o db sempre
         self.ir_para(self.Inventario)
     def IrGerenciarInventario(self, tipo):
         self.Gerenciar_inventario.atualizar_tipo(tipo)
@@ -149,6 +152,8 @@ class Inventario_ui(QWidget):
         inventario_topo_layout.addWidget(header_label("Descartado",    COL_CB))
         inv_topo_lay.addWidget(fundo_topo)
         
+
+
         inventario_base_layout = QVBoxLayout()
         #iterando esse layout para cada item no db
         item_container = QWidget()
@@ -173,11 +178,17 @@ class Inventario_ui(QWidget):
         self.lista_itens_layout.addStretch()  # empurra itens pro topo
         self.scroll_content.setLayout(self.lista_itens_layout)
         scroll_area.setWidget(self.scroll_content)
-
-
+        #barra de pesquisa
+        pesquisa = QHBoxLayout()
+        InputPesquisa = QLineEdit()
+        pesquisa.addWidget(InputPesquisa)
+        pesquisar = QPushButton("pesquisar")
+        pesquisar.clicked.connect(lambda: self.AtualizarListaFiltrado(InputPesquisa.text()))#pesquisar e recarregar
+        pesquisa.addWidget(pesquisar)
         #stylesheet nos layout
         #add layout na tela
         inventario_base_layout.addLayout(inv_topo_lay)
+        inventario_base_layout.addLayout(pesquisa)
         inventario_base_layout.addWidget(scroll_area)  
         inventario_base_layout.addWidget(item_container)
         invetario_centro_layout.addLayout(indentificacao_layout)
@@ -186,8 +197,8 @@ class Inventario_ui(QWidget):
         base_layout.addLayout(inventario_base_layout)
         self.setLayout(base_layout)
         #garantir atualizar a lista
-        self.AtualizarLista()
-    def AtualizarLista(self):
+        self.AtualizarListaItens()
+    def AtualizarListaItens(self):
         while self.lista_itens_layout.count():
             item = self.lista_itens_layout.takeAt(0)
             if item.widget():
@@ -263,18 +274,34 @@ class Inventario_ui(QWidget):
         cb_lay = QHBoxLayout(cb_container)
         cb_lay.setContentsMargins(0,0,0,0)
         cb = QCheckBox()
-        cb.setChecked(item.descartado or False)
+        #descartar item
         cb_lay.addWidget(cb, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(cb_container)
 
         return item_container
-    def AtualizarLista(self):
+    def AtualizarListaItens(self):
         while self.lista_itens_layout.count():
             item = self.lista_itens_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
 
         db_itens = InventarioFuncionalidade().ItensTotais()
+
+        for item in db_itens:
+            linha = self.criar_linha_item(item)
+            linha.setFixedHeight(78)
+            self.lista_itens_layout.addWidget(linha)
+
+        self.lista_itens_layout.addStretch()
+    def AtualizarListaFiltrado(self,filtro):
+        while self.lista_itens_layout.count():
+            item = self.lista_itens_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        if filtro:
+            db_itens = InventarioFuncionalidade().pesquisar(filtro)
+        else:
+            db_itens = InventarioFuncionalidade().ItensTotais()
 
         for item in db_itens:
             linha = self.criar_linha_item(item)
@@ -345,6 +372,7 @@ class Inventario_ui(QWidget):
         cb_lay.setContentsMargins(0,0,0,0)
         cb = QCheckBox()
         cb.setChecked(item.descartado or False)
+        cb.clicked.connect(lambda checked, id=item.id: InventarioFuncionalidade().descartearItem(id,checked))
         cb_lay.addWidget(cb, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(cb_container)
 
@@ -453,6 +481,9 @@ class Historico_ui(QWidget):
         cb_lay = QHBoxLayout(cb_container)
         cb_lay.setContentsMargins(0, 0, 0, 0)
         reverter = QCheckBox()
+        #trocar para foi alterado
+        reverter.setChecked(item.revertido or False)
+        reverter.clicked.connect(lambda checked, id=item.id: InventarioFuncionalidade().ReverterItem(id,checked))
         cb_lay.addWidget(reverter, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(cb_container)
 
@@ -634,7 +665,6 @@ class GerenciadorInventario(QWidget):
             str(self.input_descarte.date().toPython())
         )
         self.IrInventario() 
-
     def atualizar_tipo(self, tipo):
         # reseta visibilidade
         for btn in [self.btn_add, self.btn_rem, self.btn_edit]:
@@ -644,6 +674,7 @@ class GerenciadorInventario(QWidget):
         if tipo in acoes:
             esconder[tipo].setVisible(False)
             acoes[tipo]()  #chama tela especifica
+    
 
 #endregion gerenciador de inventario
 #iniciando janela

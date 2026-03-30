@@ -1,6 +1,7 @@
-from sqlalchemy import create_engine, Column, Integer, String, JSON, Boolean, ForeignKey
+from sqlalchemy import or_, create_engine, Column, Integer, String, JSON, Boolean, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import date
+import logging
 import os
 import sys
 
@@ -12,6 +13,8 @@ else:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(BASE_DIR, "GuindastesRibasDB.db")
 engine = create_engine(f'sqlite:///{db_path}', echo=True)
+logging.basicConfig()
+logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 #region DB_config
 
 class Itens(Base):
@@ -88,6 +91,36 @@ class InventarioFuncionalidade():
     def ItensTotais(self):
         #somente os visiveis
         return session.query(Itens).filter_by(Visivel=True).all()
+    def pesquisar(self,pesquisar):
+        print(f"pesquisou {pesquisar}")
+        #ilike(case sensitive) like(insensitive)
+        '''
+        %texto% encontra qualquer valor que contenha o termo buscado.
+        '''
+        ItemPesquisado = session.query(Itens).filter(
+            #pesquisa em todos as colunas do sqlalchemy
+            or_(
+                Itens.ca.like(f"%{pesquisar}%"),
+                Itens.cod_unico.like(f"%{pesquisar}%"),
+                Itens.tipo_epi.like(f"%{pesquisar}%"),
+                Itens.dono.like(f"%{pesquisar}%"),
+                Itens.usos.like(f"%{pesquisar}%"),
+                Itens.data_descarte.like(f"%{pesquisar}%"),
+                Itens.data_devolucao.like(f"%{pesquisar}%"),
+                Itens.descartado.like(f"%{pesquisar}%")
+                )).all()
+        return ItemPesquisado
+    def descartearItem(self,id,state):
+        item = session.query(Itens).filter_by(id=id).first()
+        item.descartado = state
+        session.commit()
+        return f"item foi descartado"
+    def ReverterItem(self,id,state):
+        item = session.query(Historico).filter_by(id=id).first()
+        item.revertido = state
+        session.commit()
+        #falta reverter na tabela de itens
+        return f"item foi alterado"
     def ItensHistorico(self):
         return session.query(Historico).all()
 class Historico(Base):
@@ -112,7 +145,7 @@ def fake_data():
         inv = Inventario()
         session.add(inv)
 
-        for i in range(10):
+        for i in range(100):
             novo_item = Itens(
                 ca=f"ca {i}",
                 cod_unico=f"cod {i}",
@@ -147,6 +180,9 @@ def fake_data():
 Base.metadata.create_all(engine)  
 Session = sessionmaker(bind=engine)
 session = Session()
+log_path = os.path.join(BASE_DIR, 'db.log')
+log = logging.FileHandler(filename=log_path, encoding='utf-8', mode='w')
+logging.getLogger("sqlalchemy.engine").addHandler(log)
 if __name__ == '__main__':
     #auto atualizar o db
     if os.path.exists('GuindastesRibasDB.db'):
