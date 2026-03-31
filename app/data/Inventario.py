@@ -182,6 +182,7 @@ class InventarioFuncionalidade():
             session.commit()
             #apagar do db
             session.delete(Registro)
+            session.commit()
             return "item revertido"
         except Exception as E:
             session.rollback()
