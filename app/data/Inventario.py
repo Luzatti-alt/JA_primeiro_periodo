@@ -47,6 +47,23 @@ class Inventario(Base):
     itens = relationship("Itens", back_populates="Inventario")
     historico = relationship("Historico", back_populates="Inventario")
 class InventarioFuncionalidade():
+    def __init__(self):
+        self._cache_itens = None
+
+    def ItensTotais(self, force=False):#somente os visiveis(que seriam aqueles não deletados)
+        if self._cache_itens is None or force:
+            self._cache_itens = session.query(Itens).filter_by(Visivel=True).all()
+        return self._cache_itens
+    def GerarCodUnico(self, item):
+        parte_dono = item.Dono[:3].upper()
+        parte_ca = item.Ca[:4]
+
+        desc = item.DataDescarte.replace("-", "")
+        devo = item.DataDevolucao.replace("-", "")
+
+        CodUnico = f"{parte_dono}{parte_ca}{desc[6:8]}{devo[6:8]}"
+
+        item.CodUnico = CodUnico
     def AddItem(self, ca, tipo_epi, dono, usos, data_descarte, data_devolucao): #add class de itens_como tipo
         inv = session.query(Inventario).first()
         NovoItemInventario = Itens(
@@ -61,6 +78,13 @@ class InventarioFuncionalidade():
             Inventario=inv
             )
         session.add(NovoItemInventario)
+        self.GerarCodUnico(
+            NovoItemInventario.id,
+            dono,
+            ca,
+            data_descarte,
+            data_devolucao
+            )
         session.commit()
     def RemItem(self,id):
         itens = session.query(Itens).filter_by(id=id).all()
@@ -114,7 +138,12 @@ class InventarioFuncionalidade():
                     VersaoAtual=EstadoNovo,
                     revertido=False
                 )
+                self.GerarCodUnico(Id, Dono, Ca, DataDesc, DataDev)
                 session.add(Registro)
+                session.flush()  # garante ID
+
+                self.GerarCodUnico(Item)
+
                 session.commit()
             except Exception as E:
                 session.rollback()
@@ -123,8 +152,6 @@ class InventarioFuncionalidade():
         itens = session.query(Itens).filter_by(Visivel=True).all()
         #criar listas separadas e juntar com zip desorderna isso
         return [(item.id, item.Dono) for item in itens]#nova lista mantendo ordem
-    def ItensTotais(self):#somente os visiveis(que seriam aqueles não deletados)
-        return session.query(Itens).filter_by(Visivel=True).all()
     #add funcao que se for invisivel e der x meses ele realmente deletar do db
     def pesquisar(self,pesquisar):
         #ilike(case sensitive) like(insensitive)
@@ -212,7 +239,7 @@ def fake_data():
         inv = Inventario()
         session.add(inv)
 
-        for i in range(100):
+        for i in range(3):
             novo_item = Itens(
                 Ca=f"ca {i}",
                 CodUnico=f"cod {i}",
