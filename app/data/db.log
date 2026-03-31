@@ -1,29 +1,12 @@
 BEGIN (implicit)
-SELECT itens.id AS itens_id, itens."Visivel" AS "itens_Visivel", itens.ca AS itens_ca, itens.cod_unico AS itens_cod_unico, itens.tipo_epi AS itens_tipo_epi, itens.dono AS itens_dono, itens.usos AS itens_usos, itens.data_descarte AS itens_data_descarte, itens.data_devolucao AS itens_data_devolucao, itens.descartado AS itens_descartado, itens.inventario_id AS itens_inventario_id 
+SELECT itens.id AS itens_id, itens."Visivel" AS "itens_Visivel", itens."Ca" AS "itens_Ca", itens."CodUnico" AS "itens_CodUnico", itens."TipoEpi" AS "itens_TipoEpi", itens."Dono" AS "itens_Dono", itens."Usos" AS "itens_Usos", itens."DataDescarte" AS "itens_DataDescarte", itens."DataDevolucao" AS "itens_DataDevolucao", itens."Descartado" AS "itens_Descartado", itens."InventarioId" AS "itens_InventarioId", itens."DataDeletar" AS "itens_DataDeletar" 
 FROM itens 
 WHERE itens."Visivel" = 1
-[generated in 0.00050s] ()
-SELECT itens.id AS itens_id, itens."Visivel" AS "itens_Visivel", itens.ca AS itens_ca, itens.cod_unico AS itens_cod_unico, itens.tipo_epi AS itens_tipo_epi, itens.dono AS itens_dono, itens.usos AS itens_usos, itens.data_descarte AS itens_data_descarte, itens.data_devolucao AS itens_data_devolucao, itens.descartado AS itens_descartado, itens.inventario_id AS itens_inventario_id 
+[generated in 0.00056s] ()
+SELECT itens.id AS itens_id, itens."Visivel" AS "itens_Visivel", itens."Ca" AS "itens_Ca", itens."CodUnico" AS "itens_CodUnico", itens."TipoEpi" AS "itens_TipoEpi", itens."Dono" AS "itens_Dono", itens."Usos" AS "itens_Usos", itens."DataDescarte" AS "itens_DataDescarte", itens."DataDevolucao" AS "itens_DataDevolucao", itens."Descartado" AS "itens_Descartado", itens."InventarioId" AS "itens_InventarioId", itens."DataDeletar" AS "itens_DataDeletar" 
 FROM itens 
 WHERE itens."Visivel" = 1
-[cached since 0.9119s ago] ()
-SELECT "Historico".id AS "Historico_id", "Historico".inventario_id AS "Historico_inventario_id", "Historico".id_item_alterado AS "Historico_id_item_alterado", "Historico"."tipo_alteração" AS "Historico_tipo_alteração", "Historico".versao_anterior AS "Historico_versao_anterior", "Historico".versao_atual AS "Historico_versao_atual", "Historico".revertido AS "Historico_revertido" 
+[cached since 0.6522s ago] ()
+SELECT "Historico".id AS "Historico_id", "Historico"."Inventario_id" AS "Historico_Inventario_id", "Historico"."IdItemAlterado" AS "Historico_IdItemAlterado", "Historico"."TiposAlteracao" AS "Historico_TiposAlteracao", "Historico"."VersaoAnterior" AS "Historico_VersaoAnterior", "Historico"."VersaoAtual" AS "Historico_VersaoAtual", "Historico".revertido AS "Historico_revertido" 
 FROM "Historico"
-[generated in 0.00051s] ()
-SELECT itens.id AS itens_id, itens."Visivel" AS "itens_Visivel", itens.ca AS itens_ca, itens.cod_unico AS itens_cod_unico, itens.tipo_epi AS itens_tipo_epi, itens.dono AS itens_dono, itens.usos AS itens_usos, itens.data_descarte AS itens_data_descarte, itens.data_devolucao AS itens_data_devolucao, itens.descartado AS itens_descartado, itens.inventario_id AS itens_inventario_id 
-FROM itens 
-WHERE itens.id = ?
- LIMIT ? OFFSET ?
-[generated in 0.00078s] (3, 1, 0)
-UPDATE itens SET descartado=? WHERE itens.id = ?
-[generated in 0.00058s] (1, 3)
-COMMIT
-BEGIN (implicit)
-SELECT itens.id AS itens_id, itens."Visivel" AS "itens_Visivel", itens.ca AS itens_ca, itens.cod_unico AS itens_cod_unico, itens.tipo_epi AS itens_tipo_epi, itens.dono AS itens_dono, itens.usos AS itens_usos, itens.data_descarte AS itens_data_descarte, itens.data_devolucao AS itens_data_devolucao, itens.descartado AS itens_descartado, itens.inventario_id AS itens_inventario_id 
-FROM itens 
-WHERE itens.id = ?
- LIMIT ? OFFSET ?
-[cached since 0.6149s ago] (2, 1, 0)
-UPDATE itens SET descartado=? WHERE itens.id = ?
-[cached since 0.612s ago] (0, 2)
-COMMIT
+[generated in 0.00047s] ()

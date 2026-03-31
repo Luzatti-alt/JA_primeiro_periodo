@@ -19,15 +19,15 @@ def resource_path(relative_path):
 #configurando base da gui
 app = QApplication(sys.argv)
 paleta = QPalette()
-paleta_cores = {
+PaletaCores = {
     "fundo": "#002F48",
-    "topo_inventario": "#080d3f",
+    "TopoInventario": "#080d3f",
     "botao": "#080d3f",
     "houver":"#0a1370",
     "ativo": "#2636e4",
     "texto": "#ffffff"
 }
-paleta.setColor(QPalette.ColorRole.Window, QColor(paleta_cores["fundo"]))
+paleta.setColor(QPalette.ColorRole.Window, QColor(PaletaCores["fundo"]))
 app.setPalette(paleta)
 #stylesheet do app
 app.setStyleSheet(f"""
@@ -35,649 +35,578 @@ app.setStyleSheet(f"""
                   color: #ffffff;
                   }}
                   QPushButton {{
-                  background-color: {paleta_cores['botao']};color: {paleta_cores['texto']
+                  background-color: {PaletaCores['botao']};color: {PaletaCores['texto']
                   }}}
                   QCheckBox::indicator {{
                     width: 18px;
                     height: 18px;
-                    border: 2px solid {paleta_cores['botao']};
+                    border: 2px solid {PaletaCores['botao']};
                     border-radius: 3px;
-                    background-color: {paleta_cores['botao']};
+                    background-color: {PaletaCores['botao']};
                     image: url({resource_path('app/ui/imgs/check-nao.png')});
                     }}
                   QCheckBox::indicator:checked {{
-                    background-color: {paleta_cores['texto']};
-                    border: 2px solid {paleta_cores['texto']};
+                    background-color: {PaletaCores['texto']};
+                    border: 2px solid {PaletaCores['texto']};
                     image: url({resource_path('app/ui/imgs/check-ok.png')});
     }}
 """)#trocar icon
-imagens = {
+Imagens = {
     "capacete": "imagens/capacete.png"
 }
 #endregion base projeto
 #region gerenciador interfaces graficas
-class Gerenciador_janelas(QWidget):
+class GerenciadorJanelas(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("sistema de inventario")
         self.setWindowIcon(QIcon(resource_path("app/ui/imgs/ideia_de_logo_app_JA.png")))
-        self.historico_navegacao = []
+        self.HistoricoNavegacao = []
         self.stacked = QStackedWidget()
-        self.Inventario = Inventario_ui(voltar=self.voltar, historico=self.IrHistorico, gerenciar=self.IrGerenciarInventario)
-        self.Historico = Historico_ui(Inventario=self.IrInventario, gerenciar=self.IrGerenciarInventario)
-        self.Gerenciar_inventario = GerenciadorInventario(historico=self.IrHistorico,Inventario=self.IrInventario)
+        self.Inventario = InventarioUi(Voltar=self.Voltar, Historico=self.IrHistorico, Gerenciar=self.IrGerenciarInventario)
+        self.Historico = HistoricoUi(Inventario=self.IrInventario, Gerenciar=self.IrGerenciarInventario)
+        self.GerenciarInventario = GerenciadorInventario(Historico=self.IrHistorico, Inventario=self.IrInventario)
         self.stacked.addWidget(self.Inventario)
         self.stacked.addWidget(self.Historico)
-        self.stacked.addWidget(self.Gerenciar_inventario)
+        self.stacked.addWidget(self.GerenciarInventario)
 
-        # definir layout
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.stacked)
+        # definir Layout
+        Layout = QVBoxLayout(self)
+        Layout.setContentsMargins(0, 0, 0, 0)
+        Layout.addWidget(self.stacked)
 
         # tela inicial
         self.stacked.setCurrentWidget(self.Inventario)
-    def ir_para(self, widget):
-        tela_atual = self.stacked.currentWidget()
-        if tela_atual != widget:  # Só adiciona se for uma tela diferente
-            self.historico_navegacao.append(tela_atual)
-        self.stacked.setCurrentWidget(widget)
+    def IrPara(self, Widget):
+        TelaAtual = self.stacked.currentWidget()
+        if TelaAtual != Widget:  # Só adiciona se for uma tela diferente
+            self.HistoricoNavegacao.append(TelaAtual)
+        self.stacked.setCurrentWidget(Widget)
     def IrHistorico(self):
-        self.ir_para(self.Historico)
+        self.IrPara(self.Historico)
     def IrInventario(self):
         self.Inventario.AtualizarListaItens()#recarregar o db sempre
-        self.ir_para(self.Inventario)
-    def IrGerenciarInventario(self, tipo):
-        self.Gerenciar_inventario.atualizar_tipo(tipo)
-        self.ir_para(self.Gerenciar_inventario)
-    def voltar(self):
+        self.IrPara(self.Inventario)
+    def IrGerenciarInventario(self, Tipo):
+        self.GerenciarInventario.AtualizarTipo(Tipo)
+        self.IrPara(self.GerenciarInventario)
+    def Voltar(self):
         # Volta para a última tela no histórico
-        tela_anterior = self.historico_navegacao.pop()
-        self.stacked.setCurrentWidget(tela_anterior)
+        TelaAnterior = self.HistoricoNavegacao.pop()
+        self.stacked.setCurrentWidget(TelaAnterior)
 #endregion gerenciador interfaces graficas
 #region main ui
-class Inventario_ui(QWidget):
-    def __init__ (self,voltar,historico, gerenciar):
+class InventarioUi(QWidget):
+    def __init__(self, Voltar, Historico, Gerenciar):
         super().__init__()
         #topo ui
-        topo_layout = QHBoxLayout()
-        add_item =  QPushButton("Adicionar do inventario")
-        add_item.clicked.connect(lambda: gerenciar("add"))
-        rem_item =  QPushButton("Remover do inventario")
-        rem_item.clicked.connect(lambda: gerenciar("rem"))
-        edit_item =  QPushButton("Editar o inventario")
-        edit_item.clicked.connect(lambda: gerenciar("edit"))
+        TopoLayout = QHBoxLayout()
+        AddItem = QPushButton("Adicionar do inventario")
+        AddItem.clicked.connect(lambda: Gerenciar("add"))
+        RemItem = QPushButton("Remover do inventario")
+        RemItem.clicked.connect(lambda: Gerenciar("rem"))
+        EditItem = QPushButton("Editar o inventario")
+        EditItem.clicked.connect(lambda: Gerenciar("edit"))
         HistoricoBotao = QPushButton("Historico")
-        HistoricoBotao.clicked.connect(historico)
-        topo_layout.addWidget(add_item)
-        topo_layout.addWidget(rem_item)
-        topo_layout.addWidget(edit_item)
-        topo_layout.addWidget(HistoricoBotao)
+        HistoricoBotao.clicked.connect(Historico)
+        TopoLayout.addWidget(AddItem)
+        TopoLayout.addWidget(RemItem)
+        TopoLayout.addWidget(EditItem)
+        TopoLayout.addWidget(HistoricoBotao)
 
         #inventario na ui
 
-        inv_topo_lay = QVBoxLayout()
+        InvTopoLay = QVBoxLayout()
         # Inventario no topo
-        fundo_topo = QWidget()
-        fundo_topo.setStyleSheet("background-color: #005B8C; color: #ffffff;")
-        fundo_topo.setAutoFillBackground(True)
-        inventario_topo_layout = QHBoxLayout(fundo_topo)
-        inventario_topo_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        inventario_topo_layout.setContentsMargins(8, 4, 8, 4)
-        inventario_topo_layout.addSpacing(10)
+        FundoTopo = QWidget()
+        FundoTopo.setStyleSheet("background-color: #005B8C; color: #ffffff;")
+        FundoTopo.setAutoFillBackground(True)
+        InventarioTopoLayout = QHBoxLayout(FundoTopo)
+        InventarioTopoLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        InventarioTopoLayout.setContentsMargins(8, 4, 8, 4)
+        InventarioTopoLayout.addSpacing(10)
 
         #tentativa de alinhar texto e img com o texto do topo
-        COL_IMG   = 60
-        COL_IDENT = 80
-        COL_ID = 30
-        COL_DONO  = 120
-        COL_COD   = 80
-        COL_USOS  = 140
-        COL_DEVO  = 100
-        COL_DESC  = 80
-        COL_CB    = 60
-        def header_label(text, width):
-            lbl = QLabel(text)
-            lbl.setFixedWidth(width)
-            lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            return lbl
-        inventario_topo_layout.addWidget(header_label("", COL_IMG))           # espaço da imagem
-        inventario_topo_layout.addWidget(header_label("Identificação", COL_IDENT))
-        inventario_topo_layout.addWidget(header_label("ID",          COL_ID))#conversao necessaria int -> str
-        inventario_topo_layout.addWidget(header_label("Dono",          COL_DONO))
-        inventario_topo_layout.addWidget(header_label("Código único",  COL_COD))
-        inventario_topo_layout.addWidget(header_label("Usos",          COL_USOS))
-        inventario_topo_layout.addWidget(header_label("Devolução",     COL_DEVO))
-        inventario_topo_layout.addWidget(header_label("Validade",      COL_DESC))
-        inventario_topo_layout.addWidget(header_label("Descartado",    COL_CB))
-        inv_topo_lay.addWidget(fundo_topo)
-        
+        COL_IMG    = 60
+        COL_IDENT  = 80
+        COL_ID     = 30
+        COL_DONO   = 120
+        COL_COD    = 80
+        COL_USOS   = 140
+        COL_DEVO   = 100
+        COL_DESC   = 80
+        COL_CB     = 60
+        def HeaderLabel(Text, Width):
+            Lbl = QLabel(Text)
+            Lbl.setFixedWidth(Width)
+            Lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            return Lbl
+        InventarioTopoLayout.addWidget(HeaderLabel("", COL_IMG))           # espaço da imagem
+        InventarioTopoLayout.addWidget(HeaderLabel("Identificação", COL_IDENT))
+        InventarioTopoLayout.addWidget(HeaderLabel("ID",          COL_ID))#conversao necessaria int -> str
+        InventarioTopoLayout.addWidget(HeaderLabel("Dono",          COL_DONO))
+        InventarioTopoLayout.addWidget(HeaderLabel("Código único",  COL_COD))
+        InventarioTopoLayout.addWidget(HeaderLabel("Usos",          COL_USOS))
+        InventarioTopoLayout.addWidget(HeaderLabel("Devolução",     COL_DEVO))
+        InventarioTopoLayout.addWidget(HeaderLabel("Validade",      COL_DESC))
+        InventarioTopoLayout.addWidget(HeaderLabel("Descartado",    COL_CB))
+        InvTopoLay.addWidget(FundoTopo)
 
+        InventarioBaseLayout = QVBoxLayout()
+        #iterando esse Layout para cada item no db
+        ItemContainer = QWidget()
+        ItemLinhaLayout = QHBoxLayout(ItemContainer)
+        InventarioCentroLayout = QHBoxLayout()
+        IdentificacaoLayout = QVBoxLayout()
 
-        inventario_base_layout = QVBoxLayout()
-        #iterando esse layout para cada item no db
-        item_container = QWidget()
-        item_linha_layout = QHBoxLayout(item_container)
-        invetario_centro_layout = QHBoxLayout()
-        indentificacao_layout = QVBoxLayout()
-
-        self.scroll_content = QWidget()
-        scroll_area = QScrollArea()
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setFixedHeight(5 * 80)  # ~ 5 linhas
-        self.lista_itens_layout = QVBoxLayout(self.scroll_content)
-        self.lista_itens_layout.setSpacing(10)
-        self.lista_itens_layout.setContentsMargins(0, 0, 0, 0)
-        db_itens = InventarioFuncionalidade().ItensTotais()
-        for item in db_itens:
-              linha = self.criar_linha_item(item)
-              linha.setFixedHeight(78)  # altura fixa por linha
-              self.lista_itens_layout.addWidget(linha)
-        self.lista_itens_layout.addStretch()  # empurra itens pro topo
-        self.scroll_content.setLayout(self.lista_itens_layout)
-        scroll_area.setWidget(self.scroll_content)
+        self.ScrollContent = QWidget()
+        ScrollArea = QScrollArea()
+        ScrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        ScrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        ScrollArea.setWidgetResizable(True)
+        ScrollArea.setFixedHeight(5 * 80)  # ~ 5 linhas
+        self.ListaItensLayout = QVBoxLayout(self.ScrollContent)
+        self.ListaItensLayout.setSpacing(10)
+        self.ListaItensLayout.setContentsMargins(0, 0, 0, 0)
+        DbItens = InventarioFuncionalidade().ItensTotais()
+        for Item in DbItens:
+              Linha = self.CriarLinhaItem(Item)
+              Linha.setFixedHeight(78)  # altura fixa por linha
+              self.ListaItensLayout.addWidget(Linha)
+        self.ListaItensLayout.addStretch()  # empurra itens pro topo
+        self.ScrollContent.setLayout(self.ListaItensLayout)
+        ScrollArea.setWidget(self.ScrollContent)
         #barra de pesquisa
-        pesquisa = QHBoxLayout()
+        PesquisaLayout = QHBoxLayout()
         InputPesquisa = QLineEdit()
-        pesquisa.addWidget(InputPesquisa)
-        pesquisar = QPushButton("pesquisar")
-        pesquisar.clicked.connect(lambda: self.AtualizarListaFiltrado(InputPesquisa.text()))#pesquisar e recarregar
-        pesquisa.addWidget(pesquisar)
-        #stylesheet nos layout
-        #add layout na tela
-        inventario_base_layout.addLayout(inv_topo_lay)
-        inventario_base_layout.addLayout(pesquisa)
-        inventario_base_layout.addWidget(scroll_area)  
-        inventario_base_layout.addWidget(item_container)
-        invetario_centro_layout.addLayout(indentificacao_layout)
-        base_layout = QVBoxLayout()
-        base_layout.addLayout(topo_layout)
-        base_layout.addLayout(inventario_base_layout)
-        self.setLayout(base_layout)
+        PesquisaLayout.addWidget(InputPesquisa)
+        PesquisarBotao = QPushButton("pesquisar")
+        PesquisarBotao.clicked.connect(lambda: self.AtualizarListaFiltrado(InputPesquisa.text()))#pesquisar e recarregar
+        PesquisaLayout.addWidget(PesquisarBotao)
+        #stylesheet nos Layout
+        #add Layout na tela
+        InventarioBaseLayout.addLayout(InvTopoLay)
+        InventarioBaseLayout.addLayout(PesquisaLayout)
+        InventarioBaseLayout.addWidget(ScrollArea)
+        InventarioBaseLayout.addWidget(ItemContainer)
+        InventarioCentroLayout.addLayout(IdentificacaoLayout)
+        BaseLayout = QVBoxLayout()
+        BaseLayout.addLayout(TopoLayout)
+        BaseLayout.addLayout(InventarioBaseLayout)
+        self.setLayout(BaseLayout)
         #garantir atualizar a lista
         self.AtualizarListaItens()
+
     def AtualizarListaItens(self):
-        while self.lista_itens_layout.count():
-            item = self.lista_itens_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+        while self.ListaItensLayout.count():
+            Item = self.ListaItensLayout.takeAt(0)
+            if Item.widget():
+                Item.widget().deleteLater()
 
-        db_itens = InventarioFuncionalidade().ItensTotais()
+        DbItens = InventarioFuncionalidade().ItensTotais()
 
-        for item in db_itens:
-            linha = self.criar_linha_item(item)
-            linha.setFixedHeight(78)
-            self.lista_itens_layout.addWidget(linha)
+        for Item in DbItens:
+            Linha = self.CriarLinhaItem(Item)
+            Linha.setFixedHeight(78)
+            self.ListaItensLayout.addWidget(Linha)
 
-        self.lista_itens_layout.addStretch()
+        self.ListaItensLayout.addStretch()
 
-    def criar_linha_item(self, item) -> QWidget:
-        COL_IMG   = 60
-        COL_IDENT = 80
-        COL_ID = 30
-        COL_DONO  = 120
-        COL_COD   = 80
-        COL_USOS  = 140
-        COL_DEVO  = 100
-        COL_DESC  = 80
-        COL_CB    = 60
-        item_container = QWidget()
-        item_container.setStyleSheet("background-color: #D9D9D9; color: #000000;")
-        layout = QHBoxLayout(item_container)
-        layout.setContentsMargins(8, 4, 8, 4)
-        layout.setSpacing(0)
-
-        # imagem
-        img_label = QLabel()
-        img_label.setPixmap(QPixmap(resource_path('app/ui/imgs/capacete-icon.png')))
-        img_label.setScaledContents(True)
-        img_label.setFixedSize(48, 60)
-        img_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        col_img = QWidget()
-        col_img.setFixedWidth(COL_IMG)
-        col_img_lay = QHBoxLayout(col_img)
-        col_img_lay.setContentsMargins(0,0,0,0)
-        col_img_lay.addWidget(img_label, alignment=Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(col_img)
-
-        # identificação
-        ident = QWidget()
-        ident.setFixedWidth(COL_IDENT)
-        ident_lay = QVBoxLayout(ident)
-        ident_lay.setContentsMargins(0,0,0,0)
-        ident_lay.setSpacing(2)
-        ident_lay.addWidget(QLabel(item.tipo_epi))
-        ident_lay.addWidget(QLabel(f"CA: {item.ca}"))
-        ident_lay.addWidget(QLabel(f"Cód: {item.cod_unico}"))
-        layout.addWidget(ident)
-
-        # colunas simples
-        def col(text, width, align=Qt.AlignmentFlag.AlignCenter):
-            lbl = QLabel(text)
-            lbl.setFixedWidth(width)
-            lbl.setAlignment(align)
-            lbl.setWordWrap(True)
-            return lbl
-
-        layout.addWidget(col(str(item.id), COL_ID))#conversao necessaria int -> str
-        layout.addWidget(col(item.dono, COL_DONO))
-        layout.addWidget(col(item.cod_unico, COL_COD))
-        layout.addWidget(col(item.usos_formatado, COL_USOS))
-        layout.addWidget(col(item.data_devolucao, COL_DEVO))
-        layout.addWidget(col(item.data_descarte, COL_DESC))
-
-        # checkbox centralizado
-        cb_container = QWidget()
-        cb_container.setFixedWidth(COL_CB)
-        cb_lay = QHBoxLayout(cb_container)
-        cb_lay.setContentsMargins(0,0,0,0)
-        cb = QCheckBox()
-        #descartar item
-        cb_lay.addWidget(cb, alignment=Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(cb_container)
-
-        return item_container
-    def AtualizarListaItens(self):
-        while self.lista_itens_layout.count():
-            item = self.lista_itens_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
-
-        db_itens = InventarioFuncionalidade().ItensTotais()
-
-        for item in db_itens:
-            linha = self.criar_linha_item(item)
-            linha.setFixedHeight(78)
-            self.lista_itens_layout.addWidget(linha)
-
-        self.lista_itens_layout.addStretch()
-    def AtualizarListaFiltrado(self,filtro):
-        while self.lista_itens_layout.count():
-            item = self.lista_itens_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
-        if filtro:
-            db_itens = InventarioFuncionalidade().pesquisar(filtro)
+    def AtualizarListaFiltrado(self, Filtro):
+        while self.ListaItensLayout.count():
+            Item = self.ListaItensLayout.takeAt(0)
+            if Item.widget():
+                Item.widget().deleteLater()
+        if Filtro:
+            DbItens = InventarioFuncionalidade().pesquisar(Filtro)
         else:
-            db_itens = InventarioFuncionalidade().ItensTotais()
+            DbItens = InventarioFuncionalidade().ItensTotais()
 
-        for item in db_itens:
-            linha = self.criar_linha_item(item)
-            linha.setFixedHeight(78)
-            self.lista_itens_layout.addWidget(linha)
+        for Item in DbItens:
+            Linha = self.CriarLinhaItem(Item)
+            Linha.setFixedHeight(78)
+            self.ListaItensLayout.addWidget(Linha)
 
-        self.lista_itens_layout.addStretch()
+        self.ListaItensLayout.addStretch()
 
-    def criar_linha_item(self, item) -> QWidget:
-        COL_IMG   = 60
-        COL_IDENT = 80
-        COL_ID = 30
-        COL_DONO  = 120
-        COL_COD   = 80
-        COL_USOS  = 140
-        COL_DEVO  = 100
-        COL_DESC  = 80
-        COL_CB    = 60
-        item_container = QWidget()
-        item_container.setStyleSheet("background-color: #D9D9D9; color: #000000;")
-        layout = QHBoxLayout(item_container)
-        layout.setContentsMargins(8, 4, 8, 4)
-        layout.setSpacing(0)
+    def CriarLinhaItem(self, Item) -> QWidget:
+        COL_IMG    = 60
+        COL_IDENT  = 80
+        COL_ID     = 30
+        COL_DONO   = 120
+        COL_COD    = 80
+        COL_USOS   = 140
+        COL_DEVO   = 100
+        COL_DESC   = 80
+        COL_CB     = 60
+        ItemContainer = QWidget()
+        ItemContainer.setStyleSheet("background-color: #D9D9D9; color: #000000;")
+        Layout = QHBoxLayout(ItemContainer)
+        Layout.setContentsMargins(8, 4, 8, 4)
+        Layout.setSpacing(0)
 
         # imagem
-        img_label = QLabel()
-        img_label.setPixmap(QPixmap(resource_path('app/ui/imgs/capacete-icon.png')))
-        img_label.setScaledContents(True)
-        img_label.setFixedSize(48, 60)
-        img_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        col_img = QWidget()
-        col_img.setFixedWidth(COL_IMG)
-        col_img_lay = QHBoxLayout(col_img)
-        col_img_lay.setContentsMargins(0,0,0,0)
-        col_img_lay.addWidget(img_label, alignment=Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(col_img)
+        ImgLabel = QLabel()
+        ImgLabel.setPixmap(QPixmap(resource_path('app/ui/imgs/capacete-icon.png')))
+        ImgLabel.setScaledContents(True)
+        ImgLabel.setFixedSize(48, 60)
+        ImgLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        ColImgWidget = QWidget()
+        ColImgWidget.setFixedWidth(COL_IMG)
+        ColImgLay = QHBoxLayout(ColImgWidget)
+        ColImgLay.setContentsMargins(0,0,0,0)
+        ColImgLay.addWidget(ImgLabel, alignment=Qt.AlignmentFlag.AlignCenter)
+        Layout.addWidget(ColImgWidget)
 
         # identificação
-        ident = QWidget()
-        ident.setFixedWidth(COL_IDENT)
-        ident_lay = QVBoxLayout(ident)
-        ident_lay.setContentsMargins(0,0,0,0)
-        ident_lay.setSpacing(2)
-        ident_lay.addWidget(QLabel(item.tipo_epi))
-        ident_lay.addWidget(QLabel(f"CA: {item.ca}"))
-        ident_lay.addWidget(QLabel(f"Cód: {item.cod_unico}"))
-        layout.addWidget(ident)
+        Ident = QWidget()
+        Ident.setFixedWidth(COL_IDENT)
+        IdentLay = QVBoxLayout(Ident)
+        IdentLay.setContentsMargins(0,0,0,0)
+        IdentLay.setSpacing(2)
+        IdentLay.addWidget(QLabel(Item.TipoEpi))
+        IdentLay.addWidget(QLabel(f"CA: {Item.Ca}"))
+        IdentLay.addWidget(QLabel(f"Cód: {Item.CodUnico}"))
+        Layout.addWidget(Ident)
 
         # colunas simples
-        def col(text, width, align=Qt.AlignmentFlag.AlignCenter):
-            lbl = QLabel(text)
-            lbl.setFixedWidth(width)
-            lbl.setAlignment(align)
-            lbl.setWordWrap(True)
-            return lbl
+        def Col(Text, Width, Align=Qt.AlignmentFlag.AlignCenter):
+            Lbl = QLabel(Text)
+            Lbl.setFixedWidth(Width)
+            Lbl.setAlignment(Align)
+            Lbl.setWordWrap(True)
+            return Lbl
 
-        layout.addWidget(col(str(item.id), COL_ID))#conversao necessaria int -> str
-        layout.addWidget(col(item.dono, COL_DONO))
-        layout.addWidget(col(item.cod_unico, COL_COD))
-        layout.addWidget(col(item.usos_formatado, COL_USOS))
-        layout.addWidget(col(item.data_devolucao, COL_DEVO))
-        layout.addWidget(col(item.data_descarte, COL_DESC))
+        Layout.addWidget(Col(str(Item.id), COL_ID))#conversao necessaria int -> str
+        Layout.addWidget(Col(Item.Dono, COL_DONO))
+        Layout.addWidget(Col(Item.CodUnico, COL_COD))
+        Layout.addWidget(Col(Item.usos_formatado, COL_USOS))
+        Layout.addWidget(Col(Item.DataDevolucao, COL_DEVO))
+        Layout.addWidget(Col(Item.DataDescarte, COL_DESC))
 
         # checkbox centralizado
-        cb_container = QWidget()
-        cb_container.setFixedWidth(COL_CB)
-        cb_lay = QHBoxLayout(cb_container)
-        cb_lay.setContentsMargins(0,0,0,0)
-        cb = QCheckBox()
-        cb.setChecked(item.descartado or False)
-        cb.clicked.connect(lambda checked, id=item.id: InventarioFuncionalidade().descartearItem(id,checked))
-        cb_lay.addWidget(cb, alignment=Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(cb_container)
+        CbContainer = QWidget()
+        CbContainer.setFixedWidth(COL_CB)
+        CbLay = QHBoxLayout(CbContainer)
+        CbLay.setContentsMargins(0,0,0,0)
+        Cb = QCheckBox()
+        Cb.setChecked(Item.Descartado or False)
+        Cb.clicked.connect(lambda Checked, Id=Item.id: InventarioFuncionalidade().descartearItem(Id, Checked))
+        CbLay.addWidget(Cb, alignment=Qt.AlignmentFlag.AlignCenter)
+        Layout.addWidget(CbContainer)
 
-        return item_container
+        return ItemContainer
 #endregion main ui
 #region historico
-class Historico_ui(QWidget):
-    def __init__(self, Inventario, gerenciar):
+class HistoricoUi(QWidget):
+    def __init__(self, Inventario, Gerenciar):
         super().__init__()
-        Historico_base_layout = QVBoxLayout()
+        HistoricoBaseLayout = QVBoxLayout()
         VoltarBotao = QPushButton("Inventario")
         VoltarBotao.clicked.connect(Inventario)
-        topo_layout = QHBoxLayout()
-        add_item  = QPushButton("Adicionar do inventario")
-        add_item.clicked.connect(lambda: gerenciar("add"))
-        rem_item  = QPushButton("Remover do inventario")
-        rem_item.clicked.connect(lambda: gerenciar("rem"))
-        edit_item = QPushButton("Editar o inventario")
-        edit_item.clicked.connect(lambda: gerenciar("edit"))
-        topo_layout.addWidget(VoltarBotao)
-        topo_layout.addWidget(add_item)
-        topo_layout.addWidget(rem_item)
-        topo_layout.addWidget(edit_item)
+        TopoLayout = QHBoxLayout()
+        AddItem  = QPushButton("Adicionar do inventario")
+        AddItem.clicked.connect(lambda: Gerenciar("add"))
+        RemItem  = QPushButton("Remover do inventario")
+        RemItem.clicked.connect(lambda: Gerenciar("rem"))
+        EditItem = QPushButton("Editar o inventario")
+        EditItem.clicked.connect(lambda: Gerenciar("edit"))
+        TopoLayout.addWidget(VoltarBotao)
+        TopoLayout.addWidget(AddItem)
+        TopoLayout.addWidget(RemItem)
+        TopoLayout.addWidget(EditItem)
 
-        his_topo_lay = QVBoxLayout()
-        fundo_topo = QWidget()
-        fundo_topo.setStyleSheet("background-color: #005B8C; color: #ffffff;")
-        fundo_topo.setAutoFillBackground(True)
-        Historico_topo_layout = QHBoxLayout(fundo_topo)
-        Historico_topo_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        Historico_topo_layout.setContentsMargins(8, 4, 8, 4)
-        Historico_topo_layout.addSpacing(10)
-        COL_IMG   = 60
-        COL_IDENT = 80
-        COL_DONO  = 120
-        COL_ATUAL   = 80
-        COL_ANTERIOR  = 100
-        def header_label(text, width):
-            lbl = QLabel(text)
-            lbl.setFixedWidth(width)
-            lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            return lbl
-        Historico_topo_layout.addWidget(header_label("", COL_IMG))           # espaço da imagem
-        Historico_topo_layout.addWidget(header_label("Identificação", COL_IDENT))
-        Historico_topo_layout.addWidget(header_label("Dono",          COL_DONO))
-        Historico_topo_layout.addWidget(header_label("versão anterior",     COL_ANTERIOR))
-        Historico_topo_layout.addWidget(header_label("versão atual",  COL_ATUAL))
-        Historico_topo_layout.addWidget(header_label("Reverter",  COL_ATUAL))
-        his_topo_lay.addWidget(fundo_topo)
-        
+        HisTopoLay = QVBoxLayout()
+        FundoTopo = QWidget()
+        FundoTopo.setStyleSheet("background-color: #005B8C; color: #ffffff;")
+        FundoTopo.setAutoFillBackground(True)
+        HistoricoTopoLayout = QHBoxLayout(FundoTopo)
+        HistoricoTopoLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        HistoricoTopoLayout.setContentsMargins(8, 4, 8, 4)
+        HistoricoTopoLayout.addSpacing(10)
+        COL_IMG      = 60
+        COL_IDENT    = 80
+        COL_DONO     = 120
+        COL_ATUAL    = 80
+        COL_ANTERIOR = 100
+        def HeaderLabel(Text, Width):
+            Lbl = QLabel(Text)
+            Lbl.setFixedWidth(Width)
+            Lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            return Lbl
+        HistoricoTopoLayout.addWidget(HeaderLabel("", COL_IMG))           # espaço da imagem
+        HistoricoTopoLayout.addWidget(HeaderLabel("Identificação", COL_IDENT))
+        HistoricoTopoLayout.addWidget(HeaderLabel("Dono",          COL_DONO))
+        HistoricoTopoLayout.addWidget(HeaderLabel("versão anterior",     COL_ANTERIOR))
+        HistoricoTopoLayout.addWidget(HeaderLabel("versão atual",  COL_ATUAL))
+        HistoricoTopoLayout.addWidget(HeaderLabel("Reverter",  COL_ATUAL))
+        HisTopoLay.addWidget(FundoTopo)
 
-        self.scroll_content = QWidget()
-        scroll_area = QScrollArea()
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setFixedHeight(5 * 80)
-        self.lista_itens_layout = QVBoxLayout(self.scroll_content)
-        self.lista_itens_layout.setSpacing(10)
-        self.lista_itens_layout.setContentsMargins(0, 0, 0, 0)
+        self.ScrollContent = QWidget()
+        ScrollArea = QScrollArea()
+        ScrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        ScrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        ScrollArea.setWidgetResizable(True)
+        ScrollArea.setFixedHeight(5 * 80)
+        self.ListaItensLayout = QVBoxLayout(self.ScrollContent)
+        self.ListaItensLayout.setSpacing(10)
+        self.ListaItensLayout.setContentsMargins(0, 0, 0, 0)
 
-        db_itens = InventarioFuncionalidade().ItensHistorico()
-        for item in db_itens:
-            linha = self.criar_linha_item(item)
-            linha.setFixedHeight(78)
-            self.lista_itens_layout.addWidget(linha)
-        self.lista_itens_layout.addStretch()
-        self.scroll_content.setLayout(self.lista_itens_layout)
-        scroll_area.setWidget(self.scroll_content)
-        Historico_base_layout.addLayout(his_topo_lay)
-        Historico_base_layout.addWidget(scroll_area)
+        DbItens = InventarioFuncionalidade().ItensHistorico()
+        for Item in DbItens:
+            Linha = self.CriarLinhaItem(Item)
+            Linha.setFixedHeight(78)
+            self.ListaItensLayout.addWidget(Linha)
+        self.ListaItensLayout.addStretch()
+        self.ScrollContent.setLayout(self.ListaItensLayout)
+        ScrollArea.setWidget(self.ScrollContent)
+        HistoricoBaseLayout.addLayout(HisTopoLay)
+        HistoricoBaseLayout.addWidget(ScrollArea)
 
-        base_layout = QVBoxLayout()
-        base_layout.addLayout(topo_layout)
-        base_layout.addLayout(Historico_base_layout)
-        self.setLayout(base_layout)
+        BaseLayout = QVBoxLayout()
+        BaseLayout.addLayout(TopoLayout)
+        BaseLayout.addLayout(HistoricoBaseLayout)
+        self.setLayout(BaseLayout)
 
-    def criar_linha_item(self, item) -> QWidget:
+    def CriarLinhaItem(self, Item) -> QWidget:
         COL_ID       = 120
         COL_TIPO     = 120
         COL_ANTERIOR = 200
         COL_ATUAL    = 100
         COL_CB       = 80
 
-        container = QWidget()
-        container.setStyleSheet("background-color: #D9D9D9; color: #000000;")
-        layout = QHBoxLayout(container)
-        layout.setContentsMargins(8, 4, 8, 4)
-        layout.setSpacing(8)
+        Container = QWidget()
+        Container.setStyleSheet("background-color: #D9D9D9; color: #000000;")
+        Layout = QHBoxLayout(Container)
+        Layout.setContentsMargins(8, 4, 8, 4)
+        Layout.setSpacing(8)
 
-        def col(text, width):
-            lbl = QLabel(str(text) if text else "—")
-            lbl.setFixedWidth(width)
-            lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            lbl.setWordWrap(True)
-            return lbl
+        def Col(Text, Width):
+            Lbl = QLabel(str(Text) if Text else "—")
+            Lbl.setFixedWidth(Width)
+            Lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            Lbl.setWordWrap(True)
+            return Lbl
 
-        layout.addWidget(col(f"Item #{item.id_item_alterado}", COL_ID))
-        layout.addWidget(col(item.tipo_alteração,              COL_TIPO))
-        layout.addWidget(col(item.versao_anterior,             COL_ANTERIOR))
-        layout.addWidget(col(item.versao_atual,                COL_ATUAL))
+        Layout.addWidget(Col(f"Item #{Item.IdItemAlterado}", COL_ID))
+        Layout.addWidget(Col(Item.TiposAlteracao,             COL_TIPO))
+        Layout.addWidget(Col(Item.VersaoAnterior,             COL_ANTERIOR))
+        Layout.addWidget(Col(Item.VersaoAtual,                COL_ATUAL))
 
-        # checkbox direto no layout, não via col()
-        cb_container = QWidget()
-        cb_container.setFixedWidth(COL_CB)
-        cb_lay = QHBoxLayout(cb_container)
-        cb_lay.setContentsMargins(0, 0, 0, 0)
-        reverter = QCheckBox()
+        # checkbox direto no Layout, não via Col()
+        CbContainer = QWidget()
+        CbContainer.setFixedWidth(COL_CB)
+        CbLay = QHBoxLayout(CbContainer)
+        CbLay.setContentsMargins(0, 0, 0, 0)
+        Reverter = QCheckBox()
         #trocar para foi alterado
-        reverter.setChecked(item.revertido or False)
-        reverter.clicked.connect(lambda checked, id=item.id: InventarioFuncionalidade().ReverterItem(id,checked))
-        cb_lay.addWidget(reverter, alignment=Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(cb_container)
+        Reverter.setChecked(Item.revertido or False)
+        Reverter.clicked.connect(lambda Checked, Id=Item.id: InventarioFuncionalidade().ReverterItem(Id, Checked))
+        CbLay.addWidget(Reverter, alignment=Qt.AlignmentFlag.AlignCenter)
+        Layout.addWidget(CbContainer)
 
-        return container
+        return Container
 #endregion historico
 #region gerenciador de inventario
 class GerenciadorInventario(QWidget):
-    def __init__(self, Inventario, historico):
+    def __init__(self, Inventario, Historico):
         super().__init__()
         self.IrInventario = Inventario
-        self.Irhistorico = historico
+        self.IrHistorico = Historico
 
         # botões fixos do topo
         self.InventarioBotao = QPushButton("Inventário")
-        self.btn_add = QPushButton("Adicionar")
-        self.btn_rem = QPushButton("Remover")
-        self.btn_edit = QPushButton("Editar")
-        self.btn_historico = QPushButton("Historico")
-        
-        self.InventarioBotao.clicked.connect(self.IrInventario)
-        self.btn_historico.clicked.connect(self.Irhistorico)
-        self.btn_add.clicked.connect(lambda: self.atualizar_tipo("add"))
-        self.btn_rem.clicked.connect(lambda: self.atualizar_tipo("rem"))
-        self.btn_edit.clicked.connect(lambda: self.atualizar_tipo("edit"))
+        self.BtnAdd = QPushButton("Adicionar")
+        self.BtnRem = QPushButton("Remover")
+        self.BtnEdit = QPushButton("Editar")
+        self.BtnHistorico = QPushButton("Historico")
 
-        topo_layout = QHBoxLayout()
-        topo_layout.addWidget(self.InventarioBotao)
-        topo_layout.addWidget(self.btn_add)
-        topo_layout.addWidget(self.btn_rem)
-        topo_layout.addWidget(self.btn_edit)
-        topo_layout.addWidget(self.btn_historico)
+        self.InventarioBotao.clicked.connect(self.IrInventario)
+        self.BtnHistorico.clicked.connect(self.IrHistorico)
+        self.BtnAdd.clicked.connect(lambda: self.AtualizarTipo("add"))
+        self.BtnRem.clicked.connect(lambda: self.AtualizarTipo("rem"))
+        self.BtnEdit.clicked.connect(lambda: self.AtualizarTipo("edit"))
+
+        TopoLayout = QHBoxLayout()
+        TopoLayout.addWidget(self.InventarioBotao)
+        TopoLayout.addWidget(self.BtnAdd)
+        TopoLayout.addWidget(self.BtnRem)
+        TopoLayout.addWidget(self.BtnEdit)
+        TopoLayout.addWidget(self.BtnHistorico)
 
         # área de conteúdo dinâmico
-        self.conteudo = QWidget()
-        self.conteudo_layout = QHBoxLayout(self.conteudo)
+        self.Conteudo = QWidget()
+        self.ConteudoLayout = QHBoxLayout(self.Conteudo)
 
-        base_layout = QVBoxLayout()
-        base_layout.addLayout(topo_layout)
-        base_layout.addWidget(self.conteudo)
-        self.setLayout(base_layout)
+        BaseLayout = QVBoxLayout()
+        BaseLayout.addLayout(TopoLayout)
+        BaseLayout.addWidget(self.Conteudo)
+        self.setLayout(BaseLayout)
+
     #permitir a troca sem criar outras classes
-    def _limpar_conteudo(self):
-        while self.conteudo_layout.count():
-            item = self.conteudo_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
-            elif item.layout():
-                self._limpar_layout(item.layout())
+    def _LimparConteudo(self):
+        while self.ConteudoLayout.count():
+            Item = self.ConteudoLayout.takeAt(0)
+            if Item.widget():
+                Item.widget().deleteLater()
+            elif Item.layout():
+                self._LimparLayout(Item.layout())
 
-    def add(self):
-        self._limpar_conteudo()
-    
-        form = QWidget()
-        form_layout = QFormLayout(form)
-        form_layout.setSpacing(10)
-    
-        self.input_ca = QLineEdit()
-        self.input_tipo = QComboBox()#select do pyside
-        self.input_tipo.addItems(["capacete","luva","cinto","bota", "alabarte", "manquito", "oculos", "protetor auricolar", "colete refletivo"])#array para cada item
-        self.input_dono = QLineEdit()
-        self.input_usos = QLineEdit()
-        self.input_devolucao = QDateEdit()
-        self.input_devolucao.setCalendarPopup(True)
-        self.input_devolucao.setDate(QDate.currentDate())
-        self.input_descarte = QDateEdit()
-        self.input_descarte.setCalendarPopup(True)
-        self.input_descarte.setDate(QDate.currentDate())
+    def _LimparLayout(self, Layout):
+        while Layout.count():
+            Item = Layout.takeAt(0)
+            if Item.widget():
+                Item.widget().deleteLater()
+            elif Item.layout():
+                self._LimparLayout(Item.layout())
 
-        form_layout.addRow("CA:",self.input_ca)
-        form_layout.addRow("Tipo de EPI:",self.input_tipo)
-        form_layout.addRow("Responsável:",self.input_dono)
-        form_layout.addRow("Usos:",self.input_usos)
-        form_layout.addRow("Data devolução:",self.input_devolucao)
-        form_layout.addRow("Data descarte:",self.input_descarte)
+    def Add(self):
+        self._LimparConteudo()
 
-        btn_confirmar = QPushButton("Adicionar item")
-        btn_confirmar.clicked.connect(self.confirmar_add)
-        form_layout.addRow(btn_confirmar)
+        Form = QWidget()
+        FormLayout = QFormLayout(Form)
+        FormLayout.setSpacing(10)
 
-        self.conteudo_layout.addWidget(form)
+        self.InputCa = QLineEdit()
+        self.InputTipo = QComboBox()#select do pyside
+        self.InputTipo.addItems(["capacete","luva","cinto","bota", "alabarte", "manquito", "oculos", "protetor auricolar", "colete refletivo"])#array para cada item
+        self.InputDono = QLineEdit()
+        self.InputUsos = QLineEdit()
+        self.InputDevolucao = QDateEdit()
+        self.InputDevolucao.setCalendarPopup(True)
+        self.InputDevolucao.setDate(QDate.currentDate())
+        self.InputDescarte = QDateEdit()
+        self.InputDescarte.setCalendarPopup(True)
+        self.InputDescarte.setDate(QDate.currentDate())
+
+        FormLayout.addRow("CA:", self.InputCa)
+        FormLayout.addRow("Tipo de EPI:", self.InputTipo)
+        FormLayout.addRow("Responsável:", self.InputDono)
+        FormLayout.addRow("Usos:", self.InputUsos)
+        FormLayout.addRow("Data devolução:", self.InputDevolucao)
+        FormLayout.addRow("Data descarte:", self.InputDescarte)
+
+        BtnConfirmar = QPushButton("Adicionar item")
+        BtnConfirmar.clicked.connect(self.ConfirmarAdd)
+        FormLayout.addRow(BtnConfirmar)
+
+        self.ConteudoLayout.addWidget(Form)
 
         #data para descarte e devolução
-    def confirmar_add(self):
-        data_dev = self.input_devolucao.date().toPython()
-        data_desc = self.input_descarte.date().toPython()
+    def ConfirmarAdd(self):
+        DataDev = self.InputDevolucao.date().toPython()
+        DataDesc = self.InputDescarte.date().toPython()
 
-        InventarioFuncionalidade().add_item(
-            ca=self.input_ca.text(),
-            tipo_epi=self.input_tipo.currentText(),
-            dono=self.input_dono.text(),
-            usos=self.input_usos.text(),
-            data_descarte=str(data_desc),
-            data_devolucao=str(data_dev)
+        InventarioFuncionalidade().AddItem(
+            ca=self.InputCa.text(),
+            tipo_epi=self.InputTipo.currentText(),
+            dono=self.InputDono.text(),
+            usos=self.InputUsos.text(),
+            data_descarte=str(DataDesc),
+            data_devolucao=str(DataDev)
         )
         self.IrInventario()
-    def rem(self):
-        self._limpar_conteudo()
-        #"select de funcionario"
-        self.ListaFuncionario = QComboBox() #itera de 
-        DBListaFuncionarios=InventarioFuncionalidade().RemListaFuncionarios()
-        self.ListaFuncionario.addItems([f"ID: {id} nome: {nome} "for id,nome in DBListaFuncionarios])
-        self.conteudo_layout.addWidget(self.ListaFuncionario)
-        RemBotao = QPushButton("remover item")
-        RemBotao.clicked.connect(self.confirmar_rem)
-        self.conteudo_layout.addWidget(RemBotao)
-    def confirmar_rem(self):
-        texto = self.ListaFuncionario.currentText()
-        item_id = int(texto.split("ID: ")[1].split(" ")[0])  # extrai o id do texto
-        InventarioFuncionalidade().rem_item(item_id)
-        VoltarInventario = self.IrInventario
-        VoltarInventario()
 
-    def edit(self):
-        self._limpar_conteudo()
+    def Rem(self):
+        self._LimparConteudo()
+        #"select de funcionario"
+        self.ListaFuncionario = QComboBox() #itera de
+        DbListaFuncionarios = InventarioFuncionalidade().RemListaFuncionarios()
+        self.ListaFuncionario.addItems([f"ID: {Id} nome: {Nome} " for Id, Nome in DbListaFuncionarios])
+        self.ConteudoLayout.addWidget(self.ListaFuncionario)
+        RemBotao = QPushButton("remover item")
+        RemBotao.clicked.connect(self.ConfirmarRem)
+        self.ConteudoLayout.addWidget(RemBotao)
+
+    def ConfirmarRem(self):
+        Texto = self.ListaFuncionario.currentText()
+        ItemId = int(Texto.split("ID: ")[1].split(" ")[0])  # extrai o id do texto
+        InventarioFuncionalidade().RemItem(ItemId)
+        self.IrInventario()
+
+    def Edit(self):
+        self._LimparConteudo()
         self.EditUi = QVBoxLayout()
-        selecionar = QWidget()
-        selecionar_layout = QFormLayout(selecionar)
+        Selecionar = QWidget()
+        SelecionarLayout = QFormLayout(Selecionar)
         #"select de funcionario"
         self.ListaFuncionario = QComboBox()
-        DBListaFuncionarios = InventarioFuncionalidade().RemListaFuncionarios()
+        DbListaFuncionarios = InventarioFuncionalidade().RemListaFuncionarios()
         self.ListaFuncionario.addItems(
-            [f"ID: {id} nome: {nome}" for id, nome in DBListaFuncionarios]
+            [f"ID: {Id} nome: {Nome}" for Id, Nome in DbListaFuncionarios]
         )
         SelecionarBotao = QPushButton("Selecionar")
-        SelecionarBotao.clicked.connect(self.selecionar_edicao)
+        SelecionarBotao.clicked.connect(self.SelecionarEdicao)
         EditBotao = QPushButton("Editar")
-        EditBotao.clicked.connect(self.confirmar_edicao)
-        selecionar_layout.addRow("Funcionário:", self.ListaFuncionario)
-        selecionar_layout.addRow(SelecionarBotao)
-        self.EditUi.addWidget(selecionar)
-        #parte escondida até selecionar
-        self.form = QWidget()
-        self.form.hide()
-        self.EditUi.addWidget(self.form)
-        self.form_layout = QFormLayout(self.form)
-        self.form_layout.setSpacing(10)
-    
-        self.input_ca = QLineEdit()
-        self.input_tipo = QComboBox()#select do pyside
-        self.input_tipo.addItems(["capacete","luva","cinto","bota", "alabarte", "manquito", "oculos", "protetor auricolar", "colete refletivo"])#array para cada item
-        self.input_dono = QLineEdit()
-        self.input_usos = QLineEdit()
-        self.input_devolucao = QDateEdit()
-        self.input_devolucao.setCalendarPopup(True)
-        self.input_devolucao.setDate(QDate.currentDate())
-        self.input_descarte = QDateEdit()
-        self.input_descarte.setCalendarPopup(True)
-        self.input_descarte.setDate(QDate.currentDate())
+        EditBotao.clicked.connect(self.ConfirmarEdicao)
+        SelecionarLayout.addRow("Funcionário:", self.ListaFuncionario)
+        SelecionarLayout.addRow(SelecionarBotao)
+        self.EditUi.addWidget(Selecionar)
+        #parte escondida até Selecionar
+        self.Form = QWidget()
+        self.Form.hide()
+        self.EditUi.addWidget(self.Form)
+        self.FormLayout = QFormLayout(self.Form)
+        self.FormLayout.setSpacing(10)
 
-        self.form_layout.addRow("CA:",self.input_ca)
-        self.form_layout.addRow("Tipo de EPI:",self.input_tipo)
-        self.form_layout.addRow("Responsável:",self.input_dono)
-        self.form_layout.addRow("Usos:",self.input_usos)
-        self.form_layout.addRow("Data devolução:",self.input_devolucao)
-        self.form_layout.addRow("Data descarte:",self.input_descarte)
+        self.InputCa = QLineEdit()
+        self.InputTipo = QComboBox()#select do pyside
+        self.InputTipo.addItems(["capacete","luva","cinto","bota", "alabarte", "manquito", "oculos", "protetor auricolar", "colete refletivo"])#array para cada item
+        self.InputDono = QLineEdit()
+        self.InputUsos = QLineEdit()
+        self.InputDevolucao = QDateEdit()
+        self.InputDevolucao.setCalendarPopup(True)
+        self.InputDevolucao.setDate(QDate.currentDate())
+        self.InputDescarte = QDateEdit()
+        self.InputDescarte.setCalendarPopup(True)
+        self.InputDescarte.setDate(QDate.currentDate())
+
+        self.FormLayout.addRow("CA:", self.InputCa)
+        self.FormLayout.addRow("Tipo de EPI:", self.InputTipo)
+        self.FormLayout.addRow("Responsável:", self.InputDono)
+        self.FormLayout.addRow("Usos:", self.InputUsos)
+        self.FormLayout.addRow("Data devolução:", self.InputDevolucao)
+        self.FormLayout.addRow("Data descarte:", self.InputDescarte)
         #
         self.EditUi.addWidget(EditBotao)
-        self.conteudo_layout.addLayout(self.EditUi)
-    def selecionar_edicao(self):
-        texto = self.ListaFuncionario.currentText()
-        item_id = int(texto.split("ID: ")[1].split(" ")[0])
-        item = InventarioFuncionalidade().SelFuncionario(item_id)
-        if item:
-            self.input_ca.setText(item.ca)
-            self.input_tipo.setCurrentText(item.tipo_epi)
-            self.input_dono.setText(item.dono)
-            self.input_usos.setText(item.usos_formatado)
-        self.form.show()
-    def confirmar_edicao(self):
-        texto = self.ListaFuncionario.currentText()
-        self.item_id_edicao = int(texto.split("ID: ")[1].split(" ")[0])
-        InventarioFuncionalidade().EditItem(
-            self.item_id_edicao,
-            self.input_ca.text(),
-            self.input_tipo.currentText(),
-            self.input_dono.text(),
-            self.input_usos.text().split(","),
-            str(self.input_devolucao.date().toPython()),
-            str(self.input_descarte.date().toPython())
-        )
-        self.IrInventario() 
-    def atualizar_tipo(self, tipo):
-        # reseta visibilidade
-        for btn in [self.btn_add, self.btn_rem, self.btn_edit]:
-            btn.setVisible(True)
-        acoes = {"add": self.add, "rem": self.rem, "edit": self.edit}
-        esconder = {"add": self.btn_add, "rem": self.btn_rem, "edit": self.btn_edit}
-        if tipo in acoes:
-            esconder[tipo].setVisible(False)
-            acoes[tipo]()  #chama tela especifica
-    
+        self.ConteudoLayout.addLayout(self.EditUi)
 
+    def SelecionarEdicao(self):
+        Texto = self.ListaFuncionario.currentText()
+        ItemId = int(Texto.split("ID: ")[1].split(" ")[0])
+        Item = InventarioFuncionalidade().SelFuncionario(ItemId)
+        if Item:
+            self.InputCa.setText(Item.Ca)
+            self.InputTipo.setCurrentText(Item.TipoEpi)
+            self.InputDono.setText(Item.Dono)
+            self.InputUsos.setText(Item.usos_formatado)
+        self.Form.show()
+
+    def ConfirmarEdicao(self):
+        Texto = self.ListaFuncionario.currentText()
+        self.ItemIdEdicao = int(Texto.split("ID: ")[1].split(" ")[0])
+        InventarioFuncionalidade().EditItem(
+            self.ItemIdEdicao,
+            self.InputCa.text(),
+            self.InputTipo.currentText(),
+            self.InputDono.text(),
+            self.InputUsos.text().split(","),
+            str(self.InputDevolucao.date().toPython()),
+            str(self.InputDescarte.date().toPython())
+        )
+        self.IrInventario()
+
+    def AtualizarTipo(self, Tipo):
+        # reseta visibilidade
+        for Btn in [self.BtnAdd, self.BtnRem, self.BtnEdit]:
+            Btn.setVisible(True)
+        Acoes   = {"add": self.Add,    "rem": self.Rem,    "edit": self.Edit}
+        Esconder = {"add": self.BtnAdd, "rem": self.BtnRem, "edit": self.BtnEdit}
+        if Tipo in Acoes:
+            Esconder[Tipo].setVisible(False)
+            Acoes[Tipo]()  #chama tela especifica
 #endregion gerenciador de inventario
 #iniciando janela
-window = Gerenciador_janelas()
-window.show()
+Window = GerenciadorJanelas()
+Window.show()
 sys.exit(app.exec())
