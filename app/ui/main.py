@@ -35,8 +35,9 @@ app.setStyleSheet(f"""
                   color: #ffffff;
                   }}
                   QPushButton {{
-                  background-color: {PaletaCores['botao']};color: {PaletaCores['texto']
-                  }}}
+                  background-color: {PaletaCores['botao']};
+                  color: {PaletaCores['texto']};
+                  }}
                   QCheckBox::indicator {{
                     width: 18px;
                     height: 18px;
@@ -63,7 +64,7 @@ class GerenciadorJanelas(QWidget):
         self.setWindowIcon(QIcon(resource_path("app/ui/imgs/ideia_de_logo_app_JA.png")))
         self.HistoricoNavegacao = []
         self.stacked = QStackedWidget()
-        self.Inventario = InventarioUi(Voltar=self.Voltar, Historico=self.IrHistorico, Gerenciar=self.IrGerenciarInventario)
+        self.Inventario = InventarioUi(Historico=self.IrHistorico, Gerenciar=self.IrGerenciarInventario)
         self.Historico = HistoricoUi(Inventario=self.IrInventario, Gerenciar=self.IrGerenciarInventario)
         self.GerenciarInventario = GerenciadorInventario(Historico=self.IrHistorico, Inventario=self.IrInventario)
         self.stacked.addWidget(self.Inventario)
@@ -85,19 +86,15 @@ class GerenciadorJanelas(QWidget):
     def IrHistorico(self):
         self.IrPara(self.Historico)
     def IrInventario(self):
-        self.Inventario.AtualizarListaItens()#recarregar o db sempre
         self.IrPara(self.Inventario)
+        self.Inventario.AtualizarListaItens()#recarregar o db sempre, aqui so para não ter a impressão de lag
     def IrGerenciarInventario(self, Tipo):
         self.GerenciarInventario.AtualizarTipo(Tipo)
         self.IrPara(self.GerenciarInventario)
-    def Voltar(self):
-        # Volta para a última tela no histórico
-        TelaAnterior = self.HistoricoNavegacao.pop()
-        self.stacked.setCurrentWidget(TelaAnterior)
 #endregion gerenciador interfaces graficas
 #region main ui
 class InventarioUi(QWidget):
-    def __init__(self, Voltar, Historico, Gerenciar):
+    def __init__(self, Historico, Gerenciar):
         super().__init__()
         #topo ui
         TopoLayout = QHBoxLayout()
@@ -198,6 +195,9 @@ class InventarioUi(QWidget):
         self.AtualizarListaItens()
 
     def AtualizarListaItens(self):
+        #ainda temos um lag porem ele esta bem mais rapido
+        self.setUpdatesEnabled(False)  # impedir gargalo
+
         while self.ListaItensLayout.count():
             Item = self.ListaItensLayout.takeAt(0)
             if Item.widget():
@@ -211,6 +211,8 @@ class InventarioUi(QWidget):
             self.ListaItensLayout.addWidget(Linha)
 
         self.ListaItensLayout.addStretch()
+
+        self.setUpdatesEnabled(True)  # redesenha na tela
 
     def AtualizarListaFiltrado(self, Filtro):
         while self.ListaItensLayout.count():
@@ -347,9 +349,9 @@ class HistoricoUi(QWidget):
         ScrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         ScrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         ScrollArea.setWidgetResizable(True)
-        ScrollArea.setFixedHeight(5 * 80)
+        ScrollArea.setFixedHeight(5 * 120)
         self.ListaItensLayout = QVBoxLayout(self.ScrollContent)
-        self.ListaItensLayout.setSpacing(10)
+        self.ListaItensLayout.setSpacing(20)
         self.ListaItensLayout.setContentsMargins(0, 0, 0, 0)
 
         DbItens = InventarioFuncionalidade().ItensHistorico()
@@ -367,7 +369,47 @@ class HistoricoUi(QWidget):
         BaseLayout.addLayout(TopoLayout)
         BaseLayout.addLayout(HistoricoBaseLayout)
         self.setLayout(BaseLayout)
+    def formatar_dict_texto(self,d):
+        if not d:
+            return "—"
 
+        nomes_amigaveis = {
+            "Ca": "CA",
+            "TipoEpi": "Tipo",
+            "Dono": "Responsável",
+            "Usos": "Usos",
+            "DataDevolucao": "Devolução",
+            "DataDescarte": "Validade"
+        }
+
+        linhas = []
+        for chave, valor in d.items():
+            nome = nomes_amigaveis.get(chave, chave)
+
+            # tratar lista (ex: usos)
+            if isinstance(valor, list):
+                valor = ", ".join(valor)
+
+            linhas.append(f"{nome}: {valor}")
+
+        return "\n".join(linhas)
+    def AtualizarHistorico(self):
+        while self.ListaItensLayout.count():
+            item = self.ListaItensLayout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        DbItens = InventarioFuncionalidade().ItensHistorico()
+
+        for Item in DbItens:
+            Linha = self.CriarLinhaItem(Item)
+            Linha.setFixedHeight(78)
+            self.ListaItensLayout.addWidget(Linha)
+
+        self.ListaItensLayout.addStretch()
+    def ReverterEAtualizar(self, Id, Checked):
+        InventarioFuncionalidade().ReverterItem(Id, Checked)
+        self.AtualizarHistorico()
     def CriarLinhaItem(self, Item) -> QWidget:
         COL_ID       = 120
         COL_TIPO     = 120
@@ -390,8 +432,8 @@ class HistoricoUi(QWidget):
 
         Layout.addWidget(Col(f"Item #{Item.IdItemAlterado}", COL_ID))
         Layout.addWidget(Col(Item.TiposAlteracao,             COL_TIPO))
-        Layout.addWidget(Col(Item.VersaoAnterior,             COL_ANTERIOR))
-        Layout.addWidget(Col(Item.VersaoAtual,                COL_ATUAL))
+        Layout.addWidget(Col(self.formatar_dict_texto(Item.VersaoAnterior), COL_ANTERIOR))
+        Layout.addWidget(Col(self.formatar_dict_texto(Item.VersaoAtual), COL_ATUAL))
 
         # checkbox direto no Layout, não via Col()
         CbContainer = QWidget()
@@ -401,7 +443,9 @@ class HistoricoUi(QWidget):
         Reverter = QCheckBox()
         #trocar para foi alterado
         Reverter.setChecked(Item.revertido or False)
-        Reverter.clicked.connect(lambda Checked, Id=Item.id: InventarioFuncionalidade().ReverterItem(Id, Checked))
+        Reverter.clicked.connect(
+            lambda Checked, Id=Item.id: self.ReverterEAtualizar(Id, Checked)
+            )
         CbLay.addWidget(Reverter, alignment=Qt.AlignmentFlag.AlignCenter)
         Layout.addWidget(CbContainer)
 
@@ -494,6 +538,8 @@ class GerenciadorInventario(QWidget):
 
         #data para descarte e devolução
     def ConfirmarAdd(self):
+        if not self.InputCa.text() or not self.InputDono.text():
+            return #trocar para uma caixa de alert
         DataDev = self.InputDevolucao.date().toPython()
         DataDesc = self.InputDescarte.date().toPython()
 
@@ -519,8 +565,10 @@ class GerenciadorInventario(QWidget):
         self.ConteudoLayout.addWidget(RemBotao)
 
     def ConfirmarRem(self):
+        if self.ListaFuncionario.count() == 0:
+            return
         Texto = self.ListaFuncionario.currentText()
-        ItemId = int(Texto.split("ID: ")[1].split(" ")[0])  # extrai o id do texto
+        ItemId = int(Texto.split("ID: ")[1].split(" ")[0])# extrai o id do texto
         InventarioFuncionalidade().RemItem(ItemId)
         self.IrInventario()
 
@@ -590,7 +638,7 @@ class GerenciadorInventario(QWidget):
             self.InputCa.text(),
             self.InputTipo.currentText(),
             self.InputDono.text(),
-            self.InputUsos.text().split(","),
+            [uso.strip() for uso in self.InputUsos.text().split(",")],
             str(self.InputDevolucao.date().toPython()),
             str(self.InputDescarte.date().toPython())
         )

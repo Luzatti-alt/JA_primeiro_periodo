@@ -76,17 +76,49 @@ class InventarioFuncionalidade():
         return [(item.id, item.Dono) for item in itens]#nova lista mantendo ordem
     def SelFuncionario(self,ID):
         return session.query(Itens).filter_by(id=ID).first()
-    def EditItem(self, id, ca, tipo_epi, dono, usos, data_dev, data_desc):
-        item = session.query(Itens).filter_by(id=id).first()
-        if item:
-            item.Ca = ca
-            item.TipoEpi = tipo_epi
-            item.Dono = dono
-            item.Usos = usos
-            item.DataDevolucao = data_dev
-            item.DataDescarte = data_desc
-            #falta colocar no historico a versão antiga
-            session.commit()    
+    def EditItem(self, Id, Ca, TipoEpi, Dono, Usos, DataDev, DataDesc):
+        Item = session.query(Itens).filter_by(id=Id).first()
+        if Item:
+            try:
+                # salva estado anterior antes de alterar
+                EstadoAnterior = {
+                    "Ca": Item.Ca,
+                    "TipoEpi": Item.TipoEpi,
+                    "Dono": Item.Dono,
+                    "Usos": Item.Usos,
+                    "DataDevolucao": Item.DataDevolucao,
+                    "DataDescarte": Item.DataDescarte
+                }
+                EstadoNovo = {
+                    "Ca": Ca,
+                    "TipoEpi": TipoEpi,
+                    "Dono": Dono,
+                    "Usos": Usos,
+                    "DataDevolucao": DataDev,
+                    "DataDescarte": DataDesc
+                }
+                # aplica alteração
+                Item.Ca = Ca
+                Item.TipoEpi = TipoEpi
+                Item.Dono = Dono
+                Item.Usos = Usos
+                Item.DataDevolucao = DataDev
+                Item.DataDescarte = DataDesc
+                # registra no historico
+                Inv = session.query(Inventario).first()
+                Registro = Historico(
+                    Inventario_id=Inv.id,
+                    IdItemAlterado=Id,
+                    TiposAlteracao="edicao",
+                    VersaoAnterior=EstadoAnterior,
+                    VersaoAtual=EstadoNovo,
+                    revertido=False
+                )
+                session.add(Registro)
+                session.commit()
+            except Exception as E:
+                session.rollback()
+                print(f"Erro ao editar: {E}")   
     def EditListaFuncionarios(self):
         itens = session.query(Itens).filter_by(Visivel=True).all()
         #criar listas separadas e juntar com zip desorderna isso
@@ -118,12 +150,42 @@ class InventarioFuncionalidade():
         #add alteração no outro banco de dados
         session.commit()
         return f"item foi descartado"
-    def ReverterItem(self,id,state):
-        item = session.query(Historico).filter_by(id=id).first()
-        item.revertido = state
-        #add alteração no outro banco de dados
-        session.commit()
-        #falta reverter na tabela de itens
+    def ReverterItem(self, Id, State):
+        try:
+            Registro = session.query(Historico).filter_by(id=Id).first()
+            if not Registro:
+                return "registro não encontrado"
+
+            Registro.revertido = State
+        
+            if State:  # se marcou para reverter, restaura o item
+                Item = session.query(Itens).filter_by(id=Registro.IdItemAlterado).first()
+                if Item and Registro.VersaoAnterior:
+                    Anterior = Registro.VersaoAnterior  # é um dict JSON
+                    Item.Ca = Anterior.get("Ca", Item.Ca)
+                    Item.TipoEpi = Anterior.get("TipoEpi", Item.TipoEpi)
+                    Item.Dono = Anterior.get("Dono", Item.Dono)
+                    Item.Usos = Anterior.get("Usos", Item.Usos)
+                    Item.DataDevolucao = Anterior.get("DataDevolucao", Item.DataDevolucao)
+                    Item.DataDescarte = Anterior.get("DataDescarte", Item.DataDescarte)
+            else:  # se desmarcou, restaura para o estado novo
+                Item = session.query(Itens).filter_by(id=Registro.IdItemAlterado).first()
+                if Item and Registro.VersaoAtual:
+                    Atual = Registro.VersaoAtual
+                    Item.Ca = Atual.get("Ca", Item.Ca)
+                    Item.TipoEpi = Atual.get("TipoEpi", Item.TipoEpi)
+                    Item.Dono = Atual.get("Dono", Item.Dono)
+                    Item.Usos = Atual.get("Usos", Item.Usos)
+                    Item.DataDevolucao = Atual.get("DataDevolucao", Item.DataDevolucao)
+                    Item.DataDescarte = Atual.get("DataDescarte", Item.DataDescarte)
+        
+            session.commit()
+            #apagar do db
+            session.delete(Registro)
+            return "item revertido"
+        except Exception as E:
+            session.rollback()
+            return "erro ao reverter"
         return f"item foi alterado"
     def ItensHistorico(self):
         return session.query(Historico).all()
@@ -135,8 +197,8 @@ class Historico(Base):
     Inventario = relationship("Inventario", back_populates="historico")
     IdItemAlterado = Column(Integer)
     TiposAlteracao = Column(String(50))
-    VersaoAnterior = Column(String(200))
-    VersaoAtual = Column(String(50))
+    VersaoAnterior = Column(JSON)
+    VersaoAtual = Column(JSON)
     revertido = Column(Boolean,default=False)
 # criar sessão ANTES de usar
 Session = sessionmaker(bind=engine)
@@ -162,18 +224,6 @@ def fake_data():
                 Inventario=inv
             )
             session.add(novo_item)
-        session.flush()#envia ao db sem commit no db 
-        tipos = ["adicao", "edicao", "remocao"]
-        for i, item in enumerate(inv.itens):
-            registro = Historico(
-                Inventario_id=inv.id,
-                IdItemAlterado=item.id,
-                TiposAlteracao=tipos[i % 3],
-                VersaoAnterior=f"capacete tipo {i} / fulano {i*20}",
-                VersaoAtual=f"capacete tipo {i} v2 / fulano {i*20}"
-            )
-            session.add(registro)
-
         session.commit()
 
 
