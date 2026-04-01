@@ -78,14 +78,9 @@ class InventarioFuncionalidade():
             Inventario=inv
             )
         session.add(NovoItemInventario)
-        self.GerarCodUnico(
-            NovoItemInventario.id,
-            dono,
-            ca,
-            data_descarte,
-            data_devolucao
-            )
+        self.GerarCodUnico(NovoItemInventario)
         session.commit()
+        self._cache_itens = None
     def RemItem(self,id):
         itens = session.query(Itens).filter_by(id=id).all()
         if itens:
@@ -93,7 +88,7 @@ class InventarioFuncionalidade():
             item.Visivel = False
             #criar data para a verdadeira remoção
             session.commit()
-        pass
+            self._cache_itens = None
     def RemListaFuncionarios(self):
         itens = session.query(Itens).filter_by(Visivel=True).all()
         #criar listas separadas e juntar com zip desorderna isso
@@ -138,13 +133,13 @@ class InventarioFuncionalidade():
                     VersaoAtual=EstadoNovo,
                     revertido=False
                 )
-                self.GerarCodUnico(Id, Dono, Ca, DataDesc, DataDev)
                 session.add(Registro)
                 session.flush()  # garante ID
 
                 self.GerarCodUnico(Item)
 
                 session.commit()
+                self._cache_itens = None
             except Exception as E:
                 session.rollback()
                 print(f"Erro ao editar: {E}")   
@@ -176,6 +171,7 @@ class InventarioFuncionalidade():
         item.Descartado = state
         #add alteração no outro banco de dados
         session.commit()
+        self._cache_itens = None
         return f"item foi descartado"
     def ReverterItem(self, Id, State):
         try:
@@ -206,10 +202,10 @@ class InventarioFuncionalidade():
                     Item.DataDevolucao = Atual.get("DataDevolucao", Item.DataDevolucao)
                     Item.DataDescarte = Atual.get("DataDescarte", Item.DataDescarte)
         
-            session.commit()
             #apagar do db
             session.delete(Registro)
             session.commit()
+            self._cache_itens = None
             return "item revertido"
         except Exception as E:
             session.rollback()
@@ -253,7 +249,6 @@ def fake_data():
             )
             session.add(novo_item)
         session.commit()
-
 
     except Exception as e:
         session.rollback()

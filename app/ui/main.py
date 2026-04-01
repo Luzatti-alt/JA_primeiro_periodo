@@ -547,7 +547,7 @@ class GerenciadorInventario(QWidget):
             ca=self.InputCa.text(),
             tipo_epi=self.InputTipo.currentText(),
             dono=self.InputDono.text(),
-            usos=self.InputUsos.text(),
+            usos=[uso.strip() for uso in self.InputUsos.text().split(",")],
             data_descarte=str(DataDesc),
             data_devolucao=str(DataDev)
         )
