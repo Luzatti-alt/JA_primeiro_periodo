@@ -62,13 +62,14 @@ class GerenciadorJanelas(QWidget):
         super().__init__()
         self.setWindowTitle("sistema de inventario")
         self.setWindowIcon(QIcon(resource_path("app/ui/imgs/ideia_de_logo_app_JA.png")))
-        self.HistoricoNavegacao = []
+        self.ReverterNavegacao = []
         self.stacked = QStackedWidget()
-        self.Inventario = InventarioUi(Historico=self.IrHistorico, Gerenciar=self.IrGerenciarInventario)
-        self.Historico = HistoricoUi(Inventario=self.IrInventario, Gerenciar=self.IrGerenciarInventario)
-        self.GerenciarInventario = GerenciadorInventario(Historico=self.IrHistorico, Inventario=self.IrInventario)
+        self.Inventario = InventarioUi(Historico=self.Historico,Reverter=self.IrReverter, Gerenciar=self.IrGerenciarInventario)
+        self.Historico = ReverterUi(Inventario=self.IrInventario, Gerenciar=self.IrGerenciarInventario)
+        self.Reverter = ReverterUi(Inventario=self.IrInventario, Gerenciar=self.IrGerenciarInventario)
+        self.GerenciarInventario = GerenciadorInventario(Reverter=self.IrReverter, Inventario=self.IrInventario)
         self.stacked.addWidget(self.Inventario)
-        self.stacked.addWidget(self.Historico)
+        self.stacked.addWidget(self.Reverter)
         self.stacked.addWidget(self.GerenciarInventario)
 
         # definir Layout
@@ -81,8 +82,10 @@ class GerenciadorJanelas(QWidget):
     def IrPara(self, Widget):
         TelaAtual = self.stacked.currentWidget()
         if TelaAtual != Widget:  # Só adiciona se for uma tela diferente
-            self.HistoricoNavegacao.append(TelaAtual)
+            self.ReverterNavegacao.append(TelaAtual)
         self.stacked.setCurrentWidget(Widget)
+    def IrReverter(self):
+        self.IrPara(self.Reverter)
     def IrHistorico(self):
         self.IrPara(self.Historico)
     def IrInventario(self):
@@ -94,7 +97,7 @@ class GerenciadorJanelas(QWidget):
 #endregion gerenciador interfaces graficas
 #region main ui
 class InventarioUi(QWidget):
-    def __init__(self, Historico, Gerenciar):
+    def __init__(self,Historico, Reverter, Gerenciar):
         super().__init__()
         #topo ui
         TopoLayout = QHBoxLayout()
@@ -104,12 +107,14 @@ class InventarioUi(QWidget):
         RemItem.clicked.connect(lambda: Gerenciar("rem"))
         EditItem = QPushButton("Editar o inventario")
         EditItem.clicked.connect(lambda: Gerenciar("edit"))
+        ReverterBotao = QPushButton("Reverter")
+        ReverterBotao.clicked.connect(Reverter)
         HistoricoBotao = QPushButton("Historico")
         HistoricoBotao.clicked.connect(Historico)
         TopoLayout.addWidget(AddItem)
         TopoLayout.addWidget(RemItem)
         TopoLayout.addWidget(EditItem)
-        TopoLayout.addWidget(HistoricoBotao)
+        TopoLayout.addWidget(ReverterBotao)
 
         #inventario na ui
 
@@ -299,7 +304,7 @@ class InventarioUi(QWidget):
 
         return ItemContainer
 #endregion main ui
-#region historico
+#region Historico
 class HistoricoUi(QWidget):
     def __init__(self, Inventario, Gerenciar):
         super().__init__()
@@ -341,7 +346,7 @@ class HistoricoUi(QWidget):
         HistoricoTopoLayout.addWidget(HeaderLabel("Dono",          COL_DONO))
         HistoricoTopoLayout.addWidget(HeaderLabel("versão anterior",     COL_ANTERIOR))
         HistoricoTopoLayout.addWidget(HeaderLabel("versão atual",  COL_ATUAL))
-        HistoricoTopoLayout.addWidget(HeaderLabel("Reverter",  COL_ATUAL))
+        HistoricoTopoLayout.addWidget(HeaderLabel("Historico",  COL_ATUAL))
         HisTopoLay.addWidget(FundoTopo)
 
         self.ScrollContent = QWidget()
@@ -407,9 +412,161 @@ class HistoricoUi(QWidget):
             self.ListaItensLayout.addWidget(Linha)
 
         self.ListaItensLayout.addStretch()
+    def HistoricoEAtualizar(self, Id, Checked):
+        InventarioFuncionalidade().HistoricoItem(Id, Checked)
+        self.AtualizarHistorico()
+    def CriarLinhaItem(self, Item) -> QWidget:
+        COL_ID       = 120
+        COL_TIPO     = 120
+        COL_ANTERIOR = 200
+        COL_ATUAL    = 100
+        COL_CB       = 80
+
+        Container = QWidget()
+        Container.setStyleSheet("background-color: #D9D9D9; color: #000000;")
+        Layout = QHBoxLayout(Container)
+        Layout.setContentsMargins(8, 4, 8, 4)
+        Layout.setSpacing(8)
+
+        def Col(Text, Width):
+            Lbl = QLabel(str(Text) if Text else "—")
+            Lbl.setFixedWidth(Width)
+            Lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            Lbl.setWordWrap(True)
+            return Lbl
+
+        Layout.addWidget(Col(f"Item #{Item.IdItemAlterado}", COL_ID))
+        Layout.addWidget(Col(Item.TiposAlteracao,             COL_TIPO))
+        Layout.addWidget(Col(self.formatar_dict_texto(Item.VersaoAnterior), COL_ANTERIOR))
+        Layout.addWidget(Col(self.formatar_dict_texto(Item.VersaoAtual), COL_ATUAL))
+
+        # checkbox direto no Layout, não via Col()
+        CbContainer = QWidget()
+        CbContainer.setFixedWidth(COL_CB)
+        CbLay = QHBoxLayout(CbContainer)
+        CbLay.setContentsMargins(0, 0, 0, 0)
+        Historico = QCheckBox()
+        #trocar para foi alterado
+        Historico.setChecked(Item.revertido or False)
+        Historico.clicked.connect(
+            lambda Checked, Id=Item.id: self.HistoricoEAtualizar(Id, Checked)
+            )
+        CbLay.addWidget(Historico, alignment=Qt.AlignmentFlag.AlignCenter)
+        Layout.addWidget(CbContainer)
+
+        return Container
+#endregion Historico
+#region Reverter
+class ReverterUi(QWidget):
+    def __init__(self, Inventario, Gerenciar):
+        super().__init__()
+        ReverterBaseLayout = QVBoxLayout()
+        VoltarBotao = QPushButton("Inventario")
+        VoltarBotao.clicked.connect(Inventario)
+        TopoLayout = QHBoxLayout()
+        AddItem  = QPushButton("Adicionar do inventario")
+        AddItem.clicked.connect(lambda: Gerenciar("add"))
+        RemItem  = QPushButton("Remover do inventario")
+        RemItem.clicked.connect(lambda: Gerenciar("rem"))
+        EditItem = QPushButton("Editar o inventario")
+        EditItem.clicked.connect(lambda: Gerenciar("edit"))
+        TopoLayout.addWidget(VoltarBotao)
+        TopoLayout.addWidget(AddItem)
+        TopoLayout.addWidget(RemItem)
+        TopoLayout.addWidget(EditItem)
+
+        HisTopoLay = QVBoxLayout()
+        FundoTopo = QWidget()
+        FundoTopo.setStyleSheet("background-color: #005B8C; color: #ffffff;")
+        FundoTopo.setAutoFillBackground(True)
+        ReverterTopoLayout = QHBoxLayout(FundoTopo)
+        ReverterTopoLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        ReverterTopoLayout.setContentsMargins(8, 4, 8, 4)
+        ReverterTopoLayout.addSpacing(10)
+        COL_IMG      = 60
+        COL_IDENT    = 80
+        COL_DONO     = 120
+        COL_ATUAL    = 80
+        COL_ANTERIOR = 100
+        def HeaderLabel(Text, Width):
+            Lbl = QLabel(Text)
+            Lbl.setFixedWidth(Width)
+            Lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            return Lbl
+        ReverterTopoLayout.addWidget(HeaderLabel("", COL_IMG))           # espaço da imagem
+        ReverterTopoLayout.addWidget(HeaderLabel("Identificação", COL_IDENT))
+        ReverterTopoLayout.addWidget(HeaderLabel("Dono",          COL_DONO))
+        ReverterTopoLayout.addWidget(HeaderLabel("versão anterior",     COL_ANTERIOR))
+        ReverterTopoLayout.addWidget(HeaderLabel("versão atual",  COL_ATUAL))
+        ReverterTopoLayout.addWidget(HeaderLabel("Reverter",  COL_ATUAL))
+        HisTopoLay.addWidget(FundoTopo)
+
+        self.ScrollContent = QWidget()
+        ScrollArea = QScrollArea()
+        ScrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        ScrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        ScrollArea.setWidgetResizable(True)
+        ScrollArea.setFixedHeight(5 * 120)
+        self.ListaItensLayout = QVBoxLayout(self.ScrollContent)
+        self.ListaItensLayout.setSpacing(20)
+        self.ListaItensLayout.setContentsMargins(0, 0, 0, 0)
+
+        DbItens = InventarioFuncionalidade().ItensReverter()
+        for Item in DbItens:
+            Linha = self.CriarLinhaItem(Item)
+            Linha.setFixedHeight(78)
+            self.ListaItensLayout.addWidget(Linha)
+        self.ListaItensLayout.addStretch()
+        self.ScrollContent.setLayout(self.ListaItensLayout)
+        ScrollArea.setWidget(self.ScrollContent)
+        ReverterBaseLayout.addLayout(HisTopoLay)
+        ReverterBaseLayout.addWidget(ScrollArea)
+
+        BaseLayout = QVBoxLayout()
+        BaseLayout.addLayout(TopoLayout)
+        BaseLayout.addLayout(ReverterBaseLayout)
+        self.setLayout(BaseLayout)
+    def formatar_dict_texto(self,d):
+        if not d:
+            return "—"
+
+        nomes_amigaveis = {
+            "Ca": "CA",
+            "TipoEpi": "Tipo",
+            "Dono": "Responsável",
+            "Usos": "Usos",
+            "DataDevolucao": "Devolução",
+            "DataDescarte": "Validade"
+        }
+
+        linhas = []
+        for chave, valor in d.items():
+            nome = nomes_amigaveis.get(chave, chave)
+
+            # tratar lista (ex: usos)
+            if isinstance(valor, list):
+                valor = ", ".join(valor)
+
+            linhas.append(f"{nome}: {valor}")
+
+        return "\n".join(linhas)
+    def AtualizarReverter(self):
+        while self.ListaItensLayout.count():
+            item = self.ListaItensLayout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        DbItens = InventarioFuncionalidade().ItensReverter()
+
+        for Item in DbItens:
+            Linha = self.CriarLinhaItem(Item)
+            Linha.setFixedHeight(78)
+            self.ListaItensLayout.addWidget(Linha)
+
+        self.ListaItensLayout.addStretch()
     def ReverterEAtualizar(self, Id, Checked):
         InventarioFuncionalidade().ReverterItem(Id, Checked)
-        self.AtualizarHistorico()
+        self.AtualizarReverter()
     def CriarLinhaItem(self, Item) -> QWidget:
         COL_ID       = 120
         COL_TIPO     = 120
@@ -450,23 +607,23 @@ class HistoricoUi(QWidget):
         Layout.addWidget(CbContainer)
 
         return Container
-#endregion historico
+#endregion Reverter
 #region gerenciador de inventario
 class GerenciadorInventario(QWidget):
-    def __init__(self, Inventario, Historico):
+    def __init__(self, Inventario, Reverter):
         super().__init__()
         self.IrInventario = Inventario
-        self.IrHistorico = Historico
+        self.IrReverter = Reverter
 
         # botões fixos do topo
         self.InventarioBotao = QPushButton("Inventário")
         self.BtnAdd = QPushButton("Adicionar")
         self.BtnRem = QPushButton("Remover")
         self.BtnEdit = QPushButton("Editar")
-        self.BtnHistorico = QPushButton("Historico")
+        self.BtnReverter = QPushButton("Reverter")
 
         self.InventarioBotao.clicked.connect(self.IrInventario)
-        self.BtnHistorico.clicked.connect(self.IrHistorico)
+        self.BtnReverter.clicked.connect(self.IrReverter)
         self.BtnAdd.clicked.connect(lambda: self.AtualizarTipo("add"))
         self.BtnRem.clicked.connect(lambda: self.AtualizarTipo("rem"))
         self.BtnEdit.clicked.connect(lambda: self.AtualizarTipo("edit"))
@@ -476,7 +633,7 @@ class GerenciadorInventario(QWidget):
         TopoLayout.addWidget(self.BtnAdd)
         TopoLayout.addWidget(self.BtnRem)
         TopoLayout.addWidget(self.BtnEdit)
-        TopoLayout.addWidget(self.BtnHistorico)
+        TopoLayout.addWidget(self.BtnReverter)
 
         # área de conteúdo dinâmico
         self.Conteudo = QWidget()

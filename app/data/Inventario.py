@@ -1,6 +1,7 @@
+#region base do sistema
 from sqlalchemy import or_, create_engine, Column, Integer, String, JSON, Boolean, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
-from datetime import date
+from datetime import *
 import logging
 import os
 import sys
@@ -16,11 +17,19 @@ engine = create_engine(f'sqlite:///{DbPath}', echo=True)
 logging.basicConfig()
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 #region DB_config
-
+#dps trocar para contas internamente no meio do pyinstaller ou algo para localmente não ser facil de achar conta e afins
+class Contas(Base):
+    __tablename__ = 'conta'
+    id = Column(Integer, primary_key=True)
+    Conta = Column(String(50))
+    cargo = Column(String(50))
+    InventarioId = Column(Integer, ForeignKey("Inventario.id"))  # ← adicionar isso
+    Inventario = relationship("Inventario", back_populates="contas") 
 class Itens(Base):
     __tablename__ = 'itens'
 
     id = Column(Integer, primary_key=True)
+    CadastradoPor = Column(String(50))
     Visivel = Column(Boolean,default=True)#qnd "excluir" so ira fazer com que nao apareca
     #isso por 6 meses 1²anos algo assim dps disso não precisaria do dado de qualquer forma
     Ca = Column(String)
@@ -40,18 +49,37 @@ class Itens(Base):
         if isinstance(self.Usos, list):
             return ", ".join(self.Usos)
         return str(self.Usos) if self.Usos else ""
-#endregion
+#endregion DB_config
+#endregion base do sistema
+#region funcionalidades
 class Inventario(Base):
     __tablename__ = 'Inventario'
     id = Column(Integer, primary_key=True)
     itens = relationship("Itens", back_populates="Inventario")
-    historico = relationship("Historico", back_populates="Inventario")
+    Reverter = relationship("Reverter", back_populates="Inventario")
+    Historico = relationship("Historico", back_populates="Inventario")
+    contas = relationship("Contas", back_populates="Inventario")
+
+#gerenciador com tempo/com data
+class GerenciadorTemporal():
+    def __init__(self):
+        #DataAtual = date.day()
+        #print(DataAtual)
+        pass
+    def ConferirValDev(self):
+        #ve se esta valido ou se já era para ser devolvido
+        pass
+    def ExclusaoVerdadeira(self):
+        #apos x meses ele ira deletar no db
+        pass
+#gerenciador geral
 class InventarioFuncionalidade():
     def __init__(self):
         self._cache_itens = None
 
     def ItensTotais(self, force=False):#somente os visiveis(que seriam aqueles não deletados)
         if self._cache_itens is None or force:
+            #trocar para invez de all de 30 em 30 para optimizar
             self._cache_itens = session.query(Itens).filter_by(Visivel=True).all()
         return self._cache_itens
     def GerarCodUnico(self, item):
@@ -123,9 +151,9 @@ class InventarioFuncionalidade():
                 Item.Usos = Usos
                 Item.DataDevolucao = DataDev
                 Item.DataDescarte = DataDesc
-                # registra no historico
+                # registra no Reverter
                 Inv = session.query(Inventario).first()
-                Registro = Historico(
+                Registro = Reverter(
                     Inventario_id=Inv.id,
                     IdItemAlterado=Id,
                     TiposAlteracao="edicao",
@@ -133,7 +161,16 @@ class InventarioFuncionalidade():
                     VersaoAtual=EstadoNovo,
                     revertido=False
                 )
+                RegistroHistorico = Historico(
+                    Inventario_id=Inv.id,
+                    IdItemAlterado=Id,
+                    TiposAlteracao="edicao",
+                    VersaoAnterior=EstadoAnterior,
+                    VersaoAtual=EstadoNovo
+                )
                 session.add(Registro)
+                session.add(RegistroHistorico)
+                session.commit()
                 session.flush()  # garante ID
 
                 self.GerarCodUnico(Item)
@@ -175,7 +212,7 @@ class InventarioFuncionalidade():
         return f"item foi descartado"
     def ReverterItem(self, Id, State):
         try:
-            Registro = session.query(Historico).filter_by(id=Id).first()
+            Registro = session.query(Reverter).filter_by(id=Id).first()
             if not Registro:
                 return "registro não encontrado"
 
@@ -203,7 +240,7 @@ class InventarioFuncionalidade():
                     Item.DataDescarte = Atual.get("DataDescarte", Item.DataDescarte)
         
             #apagar do db
-            session.delete(Registro)
+            Registro.revertido = True
             session.commit()
             self._cache_itens = None
             return "item revertido"
@@ -211,24 +248,37 @@ class InventarioFuncionalidade():
             session.rollback()
             return "erro ao reverter"
         return f"item foi alterado"
+    def ItensReverter(self):
+        return session.query(Reverter).all()
+    
     def ItensHistorico(self):
         return session.query(Historico).all()
-class Historico(Base):
+class Reverter(Base):
     #aplicar a todos os itens que forem alterados ou "removidos"
-    __tablename__ = 'Historico'
+    __tablename__ = 'Reverter'
     id = Column(Integer, primary_key=True)
     Inventario_id = Column(Integer, ForeignKey("Inventario.id"))
-    Inventario = relationship("Inventario", back_populates="historico")
+    Inventario = relationship("Inventario", back_populates="Reverter")
     IdItemAlterado = Column(Integer)
     TiposAlteracao = Column(String(50))
     VersaoAnterior = Column(JSON)
     VersaoAtual = Column(JSON)
     revertido = Column(Boolean,default=False)
+class Historico(Base):
+    #aplicar a todos os itens que forem alterados ou "removidos"
+    __tablename__ = 'Historico'
+    id = Column(Integer, primary_key=True)
+    Inventario_id = Column(Integer, ForeignKey("Inventario.id"))
+    Inventario = relationship("Inventario", back_populates="Historico")
+    IdItemAlterado = Column(Integer)
+    TiposAlteracao = Column(String(50))
+    VersaoAnterior = Column(JSON)
+    VersaoAtual = Column(JSON)
 # criar sessão ANTES de usar
 Session = sessionmaker(bind=engine)
 session = Session()
 
-
+#endregion funcionalidades
 #region fake_data
 def fake_data():
     try:
@@ -266,3 +316,4 @@ if __name__ == '__main__':
         os.remove('GuindastesRibasDB.db')
     fake_data()
     Base.metadata.create_all(engine)
+    GerenciadorTemporal()
