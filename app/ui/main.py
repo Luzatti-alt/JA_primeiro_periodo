@@ -1,6 +1,7 @@
 #region base projeto
-from PySide6.QtCore import Qt, QDate
+from PySide6.QtCore import Qt, QDate, QTimer
 from PySide6.QtGui import QColor, QPalette, QIcon, QPixmap
+from datetime import date #alertar conforme a data
 from PySide6.QtWidgets import *
 import sys
 from pathlib import Path
@@ -11,7 +12,7 @@ else:
     root = Path(__file__).parent.parent
 
 sys.path.insert(0, str(root))
-from data.Inventario import Inventario,InventarioFuncionalidade,Itens #criar init.py para reconhecer modulo
+from data.Inventario import Inventario,InventarioFuncionalidade,Itens, GerenciadorTemporal #criar init.py para reconhecer modulo
 #configuração para compilar em executavel
 def resource_path(relative_path):
     base = getattr(sys, '_MEIPASS', Path(__file__).parent.parent.parent)
@@ -64,12 +65,13 @@ class GerenciadorJanelas(QWidget):
         self.setWindowIcon(QIcon(resource_path("app/ui/imgs/ideia_de_logo_app_JA.png")))
         self.ReverterNavegacao = []
         self.stacked = QStackedWidget()
-        self.Inventario = InventarioUi(Historico=self.Historico,Reverter=self.IrReverter, Gerenciar=self.IrGerenciarInventario)
-        self.Historico = ReverterUi(Inventario=self.IrInventario, Gerenciar=self.IrGerenciarInventario)
-        self.Reverter = ReverterUi(Inventario=self.IrInventario, Gerenciar=self.IrGerenciarInventario)
-        self.GerenciarInventario = GerenciadorInventario(Reverter=self.IrReverter, Inventario=self.IrInventario)
+        self.Inventario = InventarioUi(Historico=self.IrHistorico,Reverter=self.IrReverter, Gerenciar=self.IrGerenciarInventario)
+        self.Reverter = ReverterUi(Historico=self.IrHistorico,Inventario=self.IrInventario, Gerenciar=self.IrGerenciarInventario)
+        self.Historico = HistoricoUi(Reverter=self.IrReverter,Inventario=self.IrInventario, Gerenciar=self.IrGerenciarInventario)
+        self.GerenciarInventario = GerenciadorInventario(Historico=self.IrHistorico,Reverter=self.IrReverter, Inventario=self.IrInventario)
         self.stacked.addWidget(self.Inventario)
         self.stacked.addWidget(self.Reverter)
+        self.stacked.addWidget(self.Historico)
         self.stacked.addWidget(self.GerenciarInventario)
 
         # definir Layout
@@ -97,8 +99,17 @@ class GerenciadorJanelas(QWidget):
 #endregion gerenciador interfaces graficas
 #region main ui
 class InventarioUi(QWidget):
+    PAGE_SIZE = 30
+
     def __init__(self,Historico, Reverter, Gerenciar):
         super().__init__()
+
+        #optimização da query e melhoria da experiencia do usuario
+        self._offset = 0          # quantos itens já carregados
+        self._total = 0           # total no banco
+        self._carregando = False  # evita chamadas duplicadas
+        self._filtro_ativo = ""   # guarda pesquisa atual
+
         #topo ui
         TopoLayout = QHBoxLayout()
         AddItem = QPushButton("Adicionar do inventario")
@@ -109,12 +120,13 @@ class InventarioUi(QWidget):
         EditItem.clicked.connect(lambda: Gerenciar("edit"))
         ReverterBotao = QPushButton("Reverter")
         ReverterBotao.clicked.connect(Reverter)
-        HistoricoBotao = QPushButton("Historico")
-        HistoricoBotao.clicked.connect(Historico)
+        BtnHistorico = QPushButton("Historico")
+        BtnHistorico.clicked.connect(Historico)
         TopoLayout.addWidget(AddItem)
         TopoLayout.addWidget(RemItem)
         TopoLayout.addWidget(EditItem)
         TopoLayout.addWidget(ReverterBotao)
+        TopoLayout.addWidget(BtnHistorico)
 
         #inventario na ui
 
@@ -162,22 +174,19 @@ class InventarioUi(QWidget):
         IdentificacaoLayout = QVBoxLayout()
 
         self.ScrollContent = QWidget()
-        ScrollArea = QScrollArea()
-        ScrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        ScrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        ScrollArea.setWidgetResizable(True)
-        ScrollArea.setFixedHeight(5 * 80)  # ~ 5 linhas
+        self.ScrollArea = QScrollArea()
+        self.ScrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.ScrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.ScrollArea.setWidgetResizable(True)
+        self.ScrollArea.setFixedHeight(5 * 80)  # ~ 5 linhas
         self.ListaItensLayout = QVBoxLayout(self.ScrollContent)
         self.ListaItensLayout.setSpacing(10)
         self.ListaItensLayout.setContentsMargins(0, 0, 0, 0)
-        DbItens = InventarioFuncionalidade().ItensTotais()
-        for Item in DbItens:
-              Linha = self.CriarLinhaItem(Item)
-              Linha.setFixedHeight(78)  # altura fixa por linha
-              self.ListaItensLayout.addWidget(Linha)
-        self.ListaItensLayout.addStretch()  # empurra itens pro topo
+        self.ListaItensLayout.addStretch()
         self.ScrollContent.setLayout(self.ListaItensLayout)
-        ScrollArea.setWidget(self.ScrollContent)
+        self.ScrollArea.setWidget(self.ScrollContent)
+        # detectar scroll chegando ao fim → carregar mais itens
+        self.ScrollArea.verticalScrollBar().valueChanged.connect(self._OnScroll)
         #barra de pesquisa
         PesquisaLayout = QHBoxLayout()
         InputPesquisa = QLineEdit()
@@ -189,7 +198,7 @@ class InventarioUi(QWidget):
         #add Layout na tela
         InventarioBaseLayout.addLayout(InvTopoLay)
         InventarioBaseLayout.addLayout(PesquisaLayout)
-        InventarioBaseLayout.addWidget(ScrollArea)
+        InventarioBaseLayout.addWidget(self.ScrollArea)
         InventarioBaseLayout.addWidget(ItemContainer)
         InventarioCentroLayout.addLayout(IdentificacaoLayout)
         BaseLayout = QVBoxLayout()
@@ -198,36 +207,87 @@ class InventarioUi(QWidget):
         self.setLayout(BaseLayout)
         #garantir atualizar a lista
         self.AtualizarListaItens()
+        QTimer.singleShot(500, self._AlertasVencimento)
+
+    def _AlertasVencimento(self):
+        alertas = GerenciadorTemporal().ConferirValDev()
+        atrasados = [a for a in alertas if a[1] == "atrasado"]
+        if atrasados:
+            QMessageBox.warning(self, "Atenção", f"{len(atrasados)} item(s) com devolução atrasada!")
 
     def AtualizarListaItens(self):
-        #ainda temos um lag porem ele esta bem mais rapido
-        self.setUpdatesEnabled(False)  # impedir gargalo
+        """Reseta a lista e carrega a primeira página (60 itens)."""
+        self._filtro_ativo = ""
+        self._offset = 0
+        self._total = InventarioFuncionalidade().TotalItens()
+        self._carregando = False
 
+        self.setUpdatesEnabled(False)
+
+        # limpa widgets existentes mantendo o stretch no final
         while self.ListaItensLayout.count():
             Item = self.ListaItensLayout.takeAt(0)
             if Item.widget():
                 Item.widget().deleteLater()
 
-        DbItens = InventarioFuncionalidade().ItensTotais()
+        self._CarregarPagina()
+        self.ListaItensLayout.addStretch()
+        self.setUpdatesEnabled(True)
 
-        for Item in DbItens:
+    def _CarregarPagina(self):
+        """Carrega mais PAGE_SIZE itens a partir do offset atual."""
+        if self._carregando:
+            return
+        if self._filtro_ativo:
+            return  # pesquisa já carregou tudo
+        if self._offset >= self._total:
+            return  # não há mais itens
+
+        self._carregando = True
+
+        # remove o stretch antes de adicionar novos widgets
+        Ultimo = self.ListaItensLayout.itemAt(self.ListaItensLayout.count() - 1)
+        if Ultimo and Ultimo.spacerItem():
+            self.ListaItensLayout.removeItem(Ultimo)
+
+        Novos = InventarioFuncionalidade().ItensPaginados(
+            offset=self._offset,
+            limit=self.PAGE_SIZE
+        )
+        for Item in Novos:
             Linha = self.CriarLinhaItem(Item)
             Linha.setFixedHeight(78)
             self.ListaItensLayout.addWidget(Linha)
 
+        self._offset += len(Novos)
         self.ListaItensLayout.addStretch()
+        self._carregando = False
 
-        self.setUpdatesEnabled(True)  # redesenha na tela
+    def _OnScroll(self, Valor):
+        """Dispara carregamento quando scroll chega perto do fim."""
+        Barra = self.ScrollArea.verticalScrollBar()
+        if Valor >= Barra.maximum() - 50:
+            # usa QTimer para não bloquear o evento de scroll
+            QTimer.singleShot(0, self._CarregarPagina)
 
     def AtualizarListaFiltrado(self, Filtro):
+        """Pesquisa: carrega todos os resultados filtrados de uma vez."""
         while self.ListaItensLayout.count():
             Item = self.ListaItensLayout.takeAt(0)
             if Item.widget():
                 Item.widget().deleteLater()
+
+        self._filtro_ativo = Filtro
+
         if Filtro:
             DbItens = InventarioFuncionalidade().pesquisar(Filtro)
         else:
-            DbItens = InventarioFuncionalidade().ItensTotais()
+            # sem filtro: volta para lazy loading normal
+            self._filtro_ativo = ""
+            self._offset = 0
+            self._total = InventarioFuncionalidade().TotalItens()
+            DbItens = InventarioFuncionalidade().ItensPaginados(offset=0, limit=self.PAGE_SIZE)
+            self._offset = len(DbItens)
 
         for Item in DbItens:
             Linha = self.CriarLinhaItem(Item)
@@ -302,11 +362,22 @@ class InventarioUi(QWidget):
         CbLay.addWidget(Cb, alignment=Qt.AlignmentFlag.AlignCenter)
         Layout.addWidget(CbContainer)
 
+        #gerenciar conforme data
+        try:
+            devolucao = date.fromisoformat(Item.DataDevolucao)
+            dias = (devolucao - date.today()).days
+            if dias < 0:
+                ItemContainer.setStyleSheet("background-color: #8B0000; color: #ffffff;")  # vermelho
+            elif dias <= 7:
+                ItemContainer.setStyleSheet("background-color: #8B6000; color: #ffffff;")  # amarelo
+        except (ValueError, TypeError):
+            pass
+
         return ItemContainer
 #endregion main ui
 #region Historico
 class HistoricoUi(QWidget):
-    def __init__(self, Inventario, Gerenciar):
+    def __init__(self,Reverter, Inventario, Gerenciar):
         super().__init__()
         HistoricoBaseLayout = QVBoxLayout()
         VoltarBotao = QPushButton("Inventario")
@@ -318,10 +389,13 @@ class HistoricoUi(QWidget):
         RemItem.clicked.connect(lambda: Gerenciar("rem"))
         EditItem = QPushButton("Editar o inventario")
         EditItem.clicked.connect(lambda: Gerenciar("edit"))
+        ReverterBotao = QPushButton("Reverter")
+        ReverterBotao.clicked.connect(Reverter)
         TopoLayout.addWidget(VoltarBotao)
         TopoLayout.addWidget(AddItem)
         TopoLayout.addWidget(RemItem)
         TopoLayout.addWidget(EditItem)
+        TopoLayout.addWidget(ReverterBotao)
 
         HisTopoLay = QVBoxLayout()
         FundoTopo = QWidget()
@@ -346,7 +420,6 @@ class HistoricoUi(QWidget):
         HistoricoTopoLayout.addWidget(HeaderLabel("Dono",          COL_DONO))
         HistoricoTopoLayout.addWidget(HeaderLabel("versão anterior",     COL_ANTERIOR))
         HistoricoTopoLayout.addWidget(HeaderLabel("versão atual",  COL_ATUAL))
-        HistoricoTopoLayout.addWidget(HeaderLabel("Historico",  COL_ATUAL))
         HisTopoLay.addWidget(FundoTopo)
 
         self.ScrollContent = QWidget()
@@ -440,25 +513,11 @@ class HistoricoUi(QWidget):
         Layout.addWidget(Col(self.formatar_dict_texto(Item.VersaoAnterior), COL_ANTERIOR))
         Layout.addWidget(Col(self.formatar_dict_texto(Item.VersaoAtual), COL_ATUAL))
 
-        # checkbox direto no Layout, não via Col()
-        CbContainer = QWidget()
-        CbContainer.setFixedWidth(COL_CB)
-        CbLay = QHBoxLayout(CbContainer)
-        CbLay.setContentsMargins(0, 0, 0, 0)
-        Historico = QCheckBox()
-        #trocar para foi alterado
-        Historico.setChecked(Item.revertido or False)
-        Historico.clicked.connect(
-            lambda Checked, Id=Item.id: self.HistoricoEAtualizar(Id, Checked)
-            )
-        CbLay.addWidget(Historico, alignment=Qt.AlignmentFlag.AlignCenter)
-        Layout.addWidget(CbContainer)
-
         return Container
 #endregion Historico
 #region Reverter
 class ReverterUi(QWidget):
-    def __init__(self, Inventario, Gerenciar):
+    def __init__(self,Historico, Inventario, Gerenciar):
         super().__init__()
         ReverterBaseLayout = QVBoxLayout()
         VoltarBotao = QPushButton("Inventario")
@@ -470,10 +529,14 @@ class ReverterUi(QWidget):
         RemItem.clicked.connect(lambda: Gerenciar("rem"))
         EditItem = QPushButton("Editar o inventario")
         EditItem.clicked.connect(lambda: Gerenciar("edit"))
+        BtnHistorico = QPushButton("Historico")
+        BtnHistorico.clicked.connect(Historico)
+        
         TopoLayout.addWidget(VoltarBotao)
         TopoLayout.addWidget(AddItem)
         TopoLayout.addWidget(RemItem)
         TopoLayout.addWidget(EditItem)
+        TopoLayout.addWidget(BtnHistorico)
 
         HisTopoLay = QVBoxLayout()
         FundoTopo = QWidget()
@@ -568,6 +631,7 @@ class ReverterUi(QWidget):
         InventarioFuncionalidade().ReverterItem(Id, Checked)
         self.AtualizarReverter()
     def CriarLinhaItem(self, Item) -> QWidget:
+
         COL_ID       = 120
         COL_TIPO     = 120
         COL_ANTERIOR = 200
@@ -610,7 +674,7 @@ class ReverterUi(QWidget):
 #endregion Reverter
 #region gerenciador de inventario
 class GerenciadorInventario(QWidget):
-    def __init__(self, Inventario, Reverter):
+    def __init__(self,Historico, Inventario, Reverter):
         super().__init__()
         self.IrInventario = Inventario
         self.IrReverter = Reverter
@@ -621,6 +685,8 @@ class GerenciadorInventario(QWidget):
         self.BtnRem = QPushButton("Remover")
         self.BtnEdit = QPushButton("Editar")
         self.BtnReverter = QPushButton("Reverter")
+        self.BtnHistorico = QPushButton("Historico")
+        self.BtnHistorico.clicked.connect(Historico)
 
         self.InventarioBotao.clicked.connect(self.IrInventario)
         self.BtnReverter.clicked.connect(self.IrReverter)
@@ -634,6 +700,7 @@ class GerenciadorInventario(QWidget):
         TopoLayout.addWidget(self.BtnRem)
         TopoLayout.addWidget(self.BtnEdit)
         TopoLayout.addWidget(self.BtnReverter)
+        TopoLayout.addWidget(self.BtnHistorico)
 
         # área de conteúdo dinâmico
         self.Conteudo = QWidget()

@@ -1,0 +1,1 @@
+#gera codigo de barras e verifica
