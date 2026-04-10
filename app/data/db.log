@@ -1,21 +1,216 @@
 BEGIN (implicit)
-SELECT count(*) AS count_1 
-FROM (SELECT itens.id AS itens_id, itens."CadastradoPor" AS "itens_CadastradoPor", itens."Visivel" AS "itens_Visivel", itens."Ca" AS "itens_Ca", itens."CodUnico" AS "itens_CodUnico", itens."TipoEpi" AS "itens_TipoEpi", itens."Dono" AS "itens_Dono", itens."Usos" AS "itens_Usos", itens."DataDescarte" AS "itens_DataDescarte", itens."DataDevolucao" AS "itens_DataDevolucao", itens."Descartado" AS "itens_Descartado", itens."InventarioId" AS "itens_InventarioId", itens."DataDeletar" AS "itens_DataDeletar" 
-FROM itens 
-WHERE itens."Visivel" = 1) AS anon_1
-[generated in 0.00043s] ()
-SELECT itens.id AS itens_id, itens."CadastradoPor" AS "itens_CadastradoPor", itens."Visivel" AS "itens_Visivel", itens."Ca" AS "itens_Ca", itens."CodUnico" AS "itens_CodUnico", itens."TipoEpi" AS "itens_TipoEpi", itens."Dono" AS "itens_Dono", itens."Usos" AS "itens_Usos", itens."DataDescarte" AS "itens_DataDescarte", itens."DataDevolucao" AS "itens_DataDevolucao", itens."Descartado" AS "itens_Descartado", itens."InventarioId" AS "itens_InventarioId", itens."DataDeletar" AS "itens_DataDeletar" 
-FROM itens 
-WHERE itens."Visivel" = 1
- LIMIT ? OFFSET ?
-[generated in 0.00124s] (30, 0)
-SELECT "Reverter".id AS "Reverter_id", "Reverter"."Inventario_id" AS "Reverter_Inventario_id", "Reverter"."IdItemAlterado" AS "Reverter_IdItemAlterado", "Reverter"."TiposAlteracao" AS "Reverter_TiposAlteracao", "Reverter"."VersaoAnterior" AS "Reverter_VersaoAnterior", "Reverter"."VersaoAtual" AS "Reverter_VersaoAtual", "Reverter".revertido AS "Reverter_revertido" 
-FROM "Reverter"
-[generated in 0.00060s] ()
-SELECT "Historico".id AS "Historico_id", "Historico"."Inventario_id" AS "Historico_Inventario_id", "Historico"."IdItemAlterado" AS "Historico_IdItemAlterado", "Historico"."TiposAlteracao" AS "Historico_TiposAlteracao", "Historico"."VersaoAnterior" AS "Historico_VersaoAnterior", "Historico"."VersaoAtual" AS "Historico_VersaoAtual" 
-FROM "Historico"
-[generated in 0.00076s] ()
-SELECT itens.id AS itens_id, itens."CadastradoPor" AS "itens_CadastradoPor", itens."Visivel" AS "itens_Visivel", itens."Ca" AS "itens_Ca", itens."CodUnico" AS "itens_CodUnico", itens."TipoEpi" AS "itens_TipoEpi", itens."Dono" AS "itens_Dono", itens."Usos" AS "itens_Usos", itens."DataDescarte" AS "itens_DataDescarte", itens."DataDevolucao" AS "itens_DataDevolucao", itens."Descartado" AS "itens_Descartado", itens."InventarioId" AS "itens_InventarioId", itens."DataDeletar" AS "itens_DataDeletar" 
-FROM itens 
-WHERE itens."Visivel" = 1 AND itens."Descartado" = 0
-[generated in 0.00079s] ()
+INSERT INTO "Inventario" DEFAULT VALUES
+[generated in 0.00024s] ()
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[generated in 0.00090s (insertmanyvalues) 1/100 (ordered; batch not supported)] (None, 1, 'ca 0', 'cod 0', 'capacete tipo 0 v2', 'fulano 0', '["uso 1", "uso 3"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 2/100 (ordered; batch not supported)] (None, 1, 'ca 1', 'cod 1', 'capacete tipo 1 v2', 'fulano 20', '["uso 2", "uso 4"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 3/100 (ordered; batch not supported)] (None, 1, 'ca 2', 'cod 2', 'capacete tipo 2 v2', 'fulano 40', '["uso 3", "uso 5"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 4/100 (ordered; batch not supported)] (None, 1, 'ca 3', 'cod 3', 'capacete tipo 3 v2', 'fulano 60', '["uso 4", "uso 6"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 5/100 (ordered; batch not supported)] (None, 1, 'ca 4', 'cod 4', 'capacete tipo 4 v2', 'fulano 80', '["uso 5", "uso 7"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 6/100 (ordered; batch not supported)] (None, 1, 'ca 5', 'cod 5', 'capacete tipo 5 v2', 'fulano 100', '["uso 6", "uso 8"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 7/100 (ordered; batch not supported)] (None, 1, 'ca 6', 'cod 6', 'capacete tipo 6 v2', 'fulano 120', '["uso 7", "uso 9"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 8/100 (ordered; batch not supported)] (None, 1, 'ca 7', 'cod 7', 'capacete tipo 7 v2', 'fulano 140', '["uso 8", "uso 10"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 9/100 (ordered; batch not supported)] (None, 1, 'ca 8', 'cod 8', 'capacete tipo 8 v2', 'fulano 160', '["uso 9", "uso 11"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 10/100 (ordered; batch not supported)] (None, 1, 'ca 9', 'cod 9', 'capacete tipo 9 v2', 'fulano 180', '["uso 10", "uso 12"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 11/100 (ordered; batch not supported)] (None, 1, 'ca 10', 'cod 10', 'capacete tipo 10 v2', 'fulano 200', '["uso 11", "uso 13"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 12/100 (ordered; batch not supported)] (None, 1, 'ca 11', 'cod 11', 'capacete tipo 11 v2', 'fulano 220', '["uso 12", "uso 14"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 13/100 (ordered; batch not supported)] (None, 1, 'ca 12', 'cod 12', 'capacete tipo 12 v2', 'fulano 240', '["uso 13", "uso 15"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 14/100 (ordered; batch not supported)] (None, 1, 'ca 13', 'cod 13', 'capacete tipo 13 v2', 'fulano 260', '["uso 14", "uso 16"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 15/100 (ordered; batch not supported)] (None, 1, 'ca 14', 'cod 14', 'capacete tipo 14 v2', 'fulano 280', '["uso 15", "uso 17"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 16/100 (ordered; batch not supported)] (None, 1, 'ca 15', 'cod 15', 'capacete tipo 15 v2', 'fulano 300', '["uso 16", "uso 18"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 17/100 (ordered; batch not supported)] (None, 1, 'ca 16', 'cod 16', 'capacete tipo 16 v2', 'fulano 320', '["uso 17", "uso 19"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 18/100 (ordered; batch not supported)] (None, 1, 'ca 17', 'cod 17', 'capacete tipo 17 v2', 'fulano 340', '["uso 18", "uso 20"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 19/100 (ordered; batch not supported)] (None, 1, 'ca 18', 'cod 18', 'capacete tipo 18 v2', 'fulano 360', '["uso 19", "uso 21"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 20/100 (ordered; batch not supported)] (None, 1, 'ca 19', 'cod 19', 'capacete tipo 19 v2', 'fulano 380', '["uso 20", "uso 22"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 21/100 (ordered; batch not supported)] (None, 1, 'ca 20', 'cod 20', 'capacete tipo 20 v2', 'fulano 400', '["uso 21", "uso 23"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 22/100 (ordered; batch not supported)] (None, 1, 'ca 21', 'cod 21', 'capacete tipo 21 v2', 'fulano 420', '["uso 22", "uso 24"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 23/100 (ordered; batch not supported)] (None, 1, 'ca 22', 'cod 22', 'capacete tipo 22 v2', 'fulano 440', '["uso 23", "uso 25"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 24/100 (ordered; batch not supported)] (None, 1, 'ca 23', 'cod 23', 'capacete tipo 23 v2', 'fulano 460', '["uso 24", "uso 26"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 25/100 (ordered; batch not supported)] (None, 1, 'ca 24', 'cod 24', 'capacete tipo 24 v2', 'fulano 480', '["uso 25", "uso 27"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 26/100 (ordered; batch not supported)] (None, 1, 'ca 25', 'cod 25', 'capacete tipo 25 v2', 'fulano 500', '["uso 26", "uso 28"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 27/100 (ordered; batch not supported)] (None, 1, 'ca 26', 'cod 26', 'capacete tipo 26 v2', 'fulano 520', '["uso 27", "uso 29"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 28/100 (ordered; batch not supported)] (None, 1, 'ca 27', 'cod 27', 'capacete tipo 27 v2', 'fulano 540', '["uso 28", "uso 30"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 29/100 (ordered; batch not supported)] (None, 1, 'ca 28', 'cod 28', 'capacete tipo 28 v2', 'fulano 560', '["uso 29", "uso 31"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 30/100 (ordered; batch not supported)] (None, 1, 'ca 29', 'cod 29', 'capacete tipo 29 v2', 'fulano 580', '["uso 30", "uso 32"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 31/100 (ordered; batch not supported)] (None, 1, 'ca 30', 'cod 30', 'capacete tipo 30 v2', 'fulano 600', '["uso 31", "uso 33"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 32/100 (ordered; batch not supported)] (None, 1, 'ca 31', 'cod 31', 'capacete tipo 31 v2', 'fulano 620', '["uso 32", "uso 34"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 33/100 (ordered; batch not supported)] (None, 1, 'ca 32', 'cod 32', 'capacete tipo 32 v2', 'fulano 640', '["uso 33", "uso 35"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 34/100 (ordered; batch not supported)] (None, 1, 'ca 33', 'cod 33', 'capacete tipo 33 v2', 'fulano 660', '["uso 34", "uso 36"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 35/100 (ordered; batch not supported)] (None, 1, 'ca 34', 'cod 34', 'capacete tipo 34 v2', 'fulano 680', '["uso 35", "uso 37"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 36/100 (ordered; batch not supported)] (None, 1, 'ca 35', 'cod 35', 'capacete tipo 35 v2', 'fulano 700', '["uso 36", "uso 38"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 37/100 (ordered; batch not supported)] (None, 1, 'ca 36', 'cod 36', 'capacete tipo 36 v2', 'fulano 720', '["uso 37", "uso 39"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 38/100 (ordered; batch not supported)] (None, 1, 'ca 37', 'cod 37', 'capacete tipo 37 v2', 'fulano 740', '["uso 38", "uso 40"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 39/100 (ordered; batch not supported)] (None, 1, 'ca 38', 'cod 38', 'capacete tipo 38 v2', 'fulano 760', '["uso 39", "uso 41"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 40/100 (ordered; batch not supported)] (None, 1, 'ca 39', 'cod 39', 'capacete tipo 39 v2', 'fulano 780', '["uso 40", "uso 42"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 41/100 (ordered; batch not supported)] (None, 1, 'ca 40', 'cod 40', 'capacete tipo 40 v2', 'fulano 800', '["uso 41", "uso 43"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 42/100 (ordered; batch not supported)] (None, 1, 'ca 41', 'cod 41', 'capacete tipo 41 v2', 'fulano 820', '["uso 42", "uso 44"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 43/100 (ordered; batch not supported)] (None, 1, 'ca 42', 'cod 42', 'capacete tipo 42 v2', 'fulano 840', '["uso 43", "uso 45"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 44/100 (ordered; batch not supported)] (None, 1, 'ca 43', 'cod 43', 'capacete tipo 43 v2', 'fulano 860', '["uso 44", "uso 46"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 45/100 (ordered; batch not supported)] (None, 1, 'ca 44', 'cod 44', 'capacete tipo 44 v2', 'fulano 880', '["uso 45", "uso 47"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 46/100 (ordered; batch not supported)] (None, 1, 'ca 45', 'cod 45', 'capacete tipo 45 v2', 'fulano 900', '["uso 46", "uso 48"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 47/100 (ordered; batch not supported)] (None, 1, 'ca 46', 'cod 46', 'capacete tipo 46 v2', 'fulano 920', '["uso 47", "uso 49"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 48/100 (ordered; batch not supported)] (None, 1, 'ca 47', 'cod 47', 'capacete tipo 47 v2', 'fulano 940', '["uso 48", "uso 50"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 49/100 (ordered; batch not supported)] (None, 1, 'ca 48', 'cod 48', 'capacete tipo 48 v2', 'fulano 960', '["uso 49", "uso 51"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 50/100 (ordered; batch not supported)] (None, 1, 'ca 49', 'cod 49', 'capacete tipo 49 v2', 'fulano 980', '["uso 50", "uso 52"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 51/100 (ordered; batch not supported)] (None, 1, 'ca 50', 'cod 50', 'capacete tipo 50 v2', 'fulano 1000', '["uso 51", "uso 53"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 52/100 (ordered; batch not supported)] (None, 1, 'ca 51', 'cod 51', 'capacete tipo 51 v2', 'fulano 1020', '["uso 52", "uso 54"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 53/100 (ordered; batch not supported)] (None, 1, 'ca 52', 'cod 52', 'capacete tipo 52 v2', 'fulano 1040', '["uso 53", "uso 55"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 54/100 (ordered; batch not supported)] (None, 1, 'ca 53', 'cod 53', 'capacete tipo 53 v2', 'fulano 1060', '["uso 54", "uso 56"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 55/100 (ordered; batch not supported)] (None, 1, 'ca 54', 'cod 54', 'capacete tipo 54 v2', 'fulano 1080', '["uso 55", "uso 57"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 56/100 (ordered; batch not supported)] (None, 1, 'ca 55', 'cod 55', 'capacete tipo 55 v2', 'fulano 1100', '["uso 56", "uso 58"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 57/100 (ordered; batch not supported)] (None, 1, 'ca 56', 'cod 56', 'capacete tipo 56 v2', 'fulano 1120', '["uso 57", "uso 59"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 58/100 (ordered; batch not supported)] (None, 1, 'ca 57', 'cod 57', 'capacete tipo 57 v2', 'fulano 1140', '["uso 58", "uso 60"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 59/100 (ordered; batch not supported)] (None, 1, 'ca 58', 'cod 58', 'capacete tipo 58 v2', 'fulano 1160', '["uso 59", "uso 61"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 60/100 (ordered; batch not supported)] (None, 1, 'ca 59', 'cod 59', 'capacete tipo 59 v2', 'fulano 1180', '["uso 60", "uso 62"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 61/100 (ordered; batch not supported)] (None, 1, 'ca 60', 'cod 60', 'capacete tipo 60 v2', 'fulano 1200', '["uso 61", "uso 63"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 62/100 (ordered; batch not supported)] (None, 1, 'ca 61', 'cod 61', 'capacete tipo 61 v2', 'fulano 1220', '["uso 62", "uso 64"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 63/100 (ordered; batch not supported)] (None, 1, 'ca 62', 'cod 62', 'capacete tipo 62 v2', 'fulano 1240', '["uso 63", "uso 65"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 64/100 (ordered; batch not supported)] (None, 1, 'ca 63', 'cod 63', 'capacete tipo 63 v2', 'fulano 1260', '["uso 64", "uso 66"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 65/100 (ordered; batch not supported)] (None, 1, 'ca 64', 'cod 64', 'capacete tipo 64 v2', 'fulano 1280', '["uso 65", "uso 67"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 66/100 (ordered; batch not supported)] (None, 1, 'ca 65', 'cod 65', 'capacete tipo 65 v2', 'fulano 1300', '["uso 66", "uso 68"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 67/100 (ordered; batch not supported)] (None, 1, 'ca 66', 'cod 66', 'capacete tipo 66 v2', 'fulano 1320', '["uso 67", "uso 69"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 68/100 (ordered; batch not supported)] (None, 1, 'ca 67', 'cod 67', 'capacete tipo 67 v2', 'fulano 1340', '["uso 68", "uso 70"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 69/100 (ordered; batch not supported)] (None, 1, 'ca 68', 'cod 68', 'capacete tipo 68 v2', 'fulano 1360', '["uso 69", "uso 71"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 70/100 (ordered; batch not supported)] (None, 1, 'ca 69', 'cod 69', 'capacete tipo 69 v2', 'fulano 1380', '["uso 70", "uso 72"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 71/100 (ordered; batch not supported)] (None, 1, 'ca 70', 'cod 70', 'capacete tipo 70 v2', 'fulano 1400', '["uso 71", "uso 73"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 72/100 (ordered; batch not supported)] (None, 1, 'ca 71', 'cod 71', 'capacete tipo 71 v2', 'fulano 1420', '["uso 72", "uso 74"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 73/100 (ordered; batch not supported)] (None, 1, 'ca 72', 'cod 72', 'capacete tipo 72 v2', 'fulano 1440', '["uso 73", "uso 75"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 74/100 (ordered; batch not supported)] (None, 1, 'ca 73', 'cod 73', 'capacete tipo 73 v2', 'fulano 1460', '["uso 74", "uso 76"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 75/100 (ordered; batch not supported)] (None, 1, 'ca 74', 'cod 74', 'capacete tipo 74 v2', 'fulano 1480', '["uso 75", "uso 77"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 76/100 (ordered; batch not supported)] (None, 1, 'ca 75', 'cod 75', 'capacete tipo 75 v2', 'fulano 1500', '["uso 76", "uso 78"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 77/100 (ordered; batch not supported)] (None, 1, 'ca 76', 'cod 76', 'capacete tipo 76 v2', 'fulano 1520', '["uso 77", "uso 79"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 78/100 (ordered; batch not supported)] (None, 1, 'ca 77', 'cod 77', 'capacete tipo 77 v2', 'fulano 1540', '["uso 78", "uso 80"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 79/100 (ordered; batch not supported)] (None, 1, 'ca 78', 'cod 78', 'capacete tipo 78 v2', 'fulano 1560', '["uso 79", "uso 81"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 80/100 (ordered; batch not supported)] (None, 1, 'ca 79', 'cod 79', 'capacete tipo 79 v2', 'fulano 1580', '["uso 80", "uso 82"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 81/100 (ordered; batch not supported)] (None, 1, 'ca 80', 'cod 80', 'capacete tipo 80 v2', 'fulano 1600', '["uso 81", "uso 83"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 82/100 (ordered; batch not supported)] (None, 1, 'ca 81', 'cod 81', 'capacete tipo 81 v2', 'fulano 1620', '["uso 82", "uso 84"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 83/100 (ordered; batch not supported)] (None, 1, 'ca 82', 'cod 82', 'capacete tipo 82 v2', 'fulano 1640', '["uso 83", "uso 85"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 84/100 (ordered; batch not supported)] (None, 1, 'ca 83', 'cod 83', 'capacete tipo 83 v2', 'fulano 1660', '["uso 84", "uso 86"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 85/100 (ordered; batch not supported)] (None, 1, 'ca 84', 'cod 84', 'capacete tipo 84 v2', 'fulano 1680', '["uso 85", "uso 87"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 86/100 (ordered; batch not supported)] (None, 1, 'ca 85', 'cod 85', 'capacete tipo 85 v2', 'fulano 1700', '["uso 86", "uso 88"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 87/100 (ordered; batch not supported)] (None, 1, 'ca 86', 'cod 86', 'capacete tipo 86 v2', 'fulano 1720', '["uso 87", "uso 89"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 88/100 (ordered; batch not supported)] (None, 1, 'ca 87', 'cod 87', 'capacete tipo 87 v2', 'fulano 1740', '["uso 88", "uso 90"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 89/100 (ordered; batch not supported)] (None, 1, 'ca 88', 'cod 88', 'capacete tipo 88 v2', 'fulano 1760', '["uso 89", "uso 91"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 90/100 (ordered; batch not supported)] (None, 1, 'ca 89', 'cod 89', 'capacete tipo 89 v2', 'fulano 1780', '["uso 90", "uso 92"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 91/100 (ordered; batch not supported)] (None, 1, 'ca 90', 'cod 90', 'capacete tipo 90 v2', 'fulano 1800', '["uso 91", "uso 93"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 92/100 (ordered; batch not supported)] (None, 1, 'ca 91', 'cod 91', 'capacete tipo 91 v2', 'fulano 1820', '["uso 92", "uso 94"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 93/100 (ordered; batch not supported)] (None, 1, 'ca 92', 'cod 92', 'capacete tipo 92 v2', 'fulano 1840', '["uso 93", "uso 95"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 94/100 (ordered; batch not supported)] (None, 1, 'ca 93', 'cod 93', 'capacete tipo 93 v2', 'fulano 1860', '["uso 94", "uso 96"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 95/100 (ordered; batch not supported)] (None, 1, 'ca 94', 'cod 94', 'capacete tipo 94 v2', 'fulano 1880', '["uso 95", "uso 97"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 96/100 (ordered; batch not supported)] (None, 1, 'ca 95', 'cod 95', 'capacete tipo 95 v2', 'fulano 1900', '["uso 96", "uso 98"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 97/100 (ordered; batch not supported)] (None, 1, 'ca 96', 'cod 96', 'capacete tipo 96 v2', 'fulano 1920', '["uso 97", "uso 99"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 98/100 (ordered; batch not supported)] (None, 1, 'ca 97', 'cod 97', 'capacete tipo 97 v2', 'fulano 1940', '["uso 98", "uso 100"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 99/100 (ordered; batch not supported)] (None, 1, 'ca 98', 'cod 98', 'capacete tipo 98 v2', 'fulano 1960', '["uso 99", "uso 101"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+INSERT INTO itens ("CadastradoPor", "Visivel", "Ca", "CodUnico", "TipoEpi", "Dono", "Usos", "CriadoPor", "DataDescarte", "DataDevolucao", "Descartado", "InventarioId", "DataDeletar") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+[insertmanyvalues 100/100 (ordered; batch not supported)] (None, 1, 'ca 99', 'cod 99', 'capacete tipo 99 v2', 'fulano 1980', '["uso 100", "uso 102"]', None, '10/10/2026', '09/10/2026', 0, 1, None)
+COMMIT
+BEGIN (implicit)
+PRAGMA main.table_info("conta")
+[raw sql] ()
+PRAGMA main.table_info("itens")
+[raw sql] ()
+PRAGMA main.table_info("Inventario")
+[raw sql] ()
+PRAGMA main.table_info("Reverter")
+[raw sql] ()
+PRAGMA main.table_info("Historico")
+[raw sql] ()
+COMMIT

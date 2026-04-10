@@ -1,6 +1,7 @@
 #region base projeto
-from PySide6.QtCore import Qt, QDate, QTimer
-from PySide6.QtGui import QColor, QPalette, QIcon, QPixmap
+from PySide6 import QtGui
+from PySide6.QtCore import Qt, QDate, QTimer, QPoint
+from PySide6.QtGui import QColor, QPalette, QIcon, QPixmap, QPainter, QPen, QColor, QFont
 from datetime import date #alertar conforme a data
 from PySide6.QtWidgets import *
 import sys
@@ -12,7 +13,9 @@ else:
     root = Path(__file__).parent.parent
 
 sys.path.insert(0, str(root))
-from data.Inventario import Inventario,InventarioFuncionalidade,Itens, GerenciadorTemporal #criar init.py para reconhecer modulo
+from data.Inventario import Inventario,InventarioFuncionalidade,Itens, Contas, GerenciadorTemporal #criar init.py para reconhecer modulo
+#temp
+from data.Inventario import session
 #configuração para compilar em executavel
 def resource_path(relative_path):
     base = getattr(sys, '_MEIPASS', Path(__file__).parent.parent.parent)
@@ -65,10 +68,14 @@ class GerenciadorJanelas(QWidget):
         self.setWindowIcon(QIcon(resource_path("app/ui/imgs/ideia_de_logo_app_JA.png")))
         self.ReverterNavegacao = []
         self.stacked = QStackedWidget()
+        self.Login = Login(Inventario=self.IrInventario,CriarConta=self.IrCriarConta)
+        self.CriarConta = CriarConta(Login=self.IrLogin)
         self.Inventario = InventarioUi(Historico=self.IrHistorico,Reverter=self.IrReverter, Gerenciar=self.IrGerenciarInventario)
         self.Reverter = ReverterUi(Historico=self.IrHistorico,Inventario=self.IrInventario, Gerenciar=self.IrGerenciarInventario)
         self.Historico = HistoricoUi(Reverter=self.IrReverter,Inventario=self.IrInventario, Gerenciar=self.IrGerenciarInventario)
         self.GerenciarInventario = GerenciadorInventario(Historico=self.IrHistorico,Reverter=self.IrReverter, Inventario=self.IrInventario)
+        self.stacked.addWidget(self.Login)
+        self.stacked.addWidget(self.CriarConta)
         self.stacked.addWidget(self.Inventario)
         self.stacked.addWidget(self.Reverter)
         self.stacked.addWidget(self.Historico)
@@ -80,12 +87,16 @@ class GerenciadorJanelas(QWidget):
         Layout.addWidget(self.stacked)
 
         # tela inicial
-        self.stacked.setCurrentWidget(self.Inventario)
+        self.stacked.setCurrentWidget(self.Login)
     def IrPara(self, Widget):
         TelaAtual = self.stacked.currentWidget()
         if TelaAtual != Widget:  # Só adiciona se for uma tela diferente
             self.ReverterNavegacao.append(TelaAtual)
         self.stacked.setCurrentWidget(Widget)
+    def IrLogin(self):
+        self.IrPara(self.Login)
+    def IrCriarConta(self):
+        self.IrPara(self.CriarConta)
     def IrReverter(self):
         self.IrPara(self.Reverter)
     def IrHistorico(self):
@@ -97,6 +108,107 @@ class GerenciadorJanelas(QWidget):
         self.GerenciarInventario.AtualizarTipo(Tipo)
         self.IrPara(self.GerenciarInventario)
 #endregion gerenciador interfaces graficas
+#region Conta
+class Login(QWidget):
+    SEQUENCIA_SECRETA = ["img", "img", "img"]  # clicar 3x no logo abre CriarConta
+    def __init__(self,Inventario,CriarConta):
+        super().__init__()
+        self.IrInventario = Inventario
+        self.IrCriarConta = CriarConta
+        self.HistoricoClick = []
+        Layout = QVBoxLayout()
+        Layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        font = QFont("Arial", 20)
+        Logo = QHBoxLayout()
+        self.imgLogo = QPushButton("IMG")  # ← QPushButton, não QLabel
+        self.imgLogo.setFont(font)
+        self.imgLogo.setFlat(True)  # parece label visualmente
+        self.imgLogo.setStyleSheet("border: none; background: transparent;")
+        self.imgLogo.clicked.connect(lambda: self.Registrar("img"))
+        self.TextoLogo = QLabel("Sistema PLACEHOARDER")
+        self.TextoLogo.setFont(font)
+        Logo.addWidget(self.imgLogo)
+        Logo.addWidget(self.TextoLogo)
+        Layout.addLayout(Logo)
+
+        self.Username = QLineEdit()
+        self.Username.setPlaceholderText("Usuário")
+        Layout.addWidget(self.Username)
+
+        self.Senha = QLineEdit()
+        self.Senha.setPlaceholderText("Senha")
+        self.Senha.setEchoMode(QLineEdit.EchoMode.Password)
+        Layout.addWidget(self.Senha)
+
+        self.LblErro = QLabel("")
+        self.LblErro.setStyleSheet("color: #ff4444;")
+        Layout.addWidget(self.LblErro)
+
+        LogarBotao = QPushButton("Logar")
+        LogarBotao.clicked.connect(self.Logar)
+        Layout.addWidget(LogarBotao)
+
+        self.setLayout(Layout)
+
+    def Logar(self):
+        usuario = self.Username.text().strip()
+        senha = self.Senha.text().strip()
+
+        if not usuario or not senha:
+            self.LblErro.setText("Preencha todos os campos.")
+            return
+
+        conta = Contas.login(usuario,senha)
+        if conta:
+            self.LblErro.setText("")
+            self.IrInventario()
+        else:
+            self.LblErro.setText("Usuário ou senha incorretos.")
+
+
+    def Registrar(self, Nome):
+        self.HistoricoClick.append(Nome)
+        self.HistoricoClick = self.HistoricoClick[-len(self.SEQUENCIA_SECRETA):]
+        if self.HistoricoClick == self.SEQUENCIA_SECRETA:
+            self.HistoricoClick = []
+            self.IrCriarConta()
+
+#este so ira aparecer se for apertado uma parte especifica de botoes
+class CriarConta(QWidget):
+    def __init__(self, Login):
+        super().__init__()
+        self.IrLogin = Login
+
+        Layout = QVBoxLayout()
+        Layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.InputUsuario = QLineEdit()
+        self.InputUsuario.setPlaceholderText("Usuário")
+        Layout.addWidget(self.InputUsuario)
+
+        self.InputSenha = QLineEdit()
+        self.InputSenha.setPlaceholderText("Senha")
+        self.InputSenha.setEchoMode(QLineEdit.EchoMode.Password)
+        Layout.addWidget(self.InputSenha)
+
+        self.InputCargo = QComboBox()
+        self.InputCargo.addItems(["admin", "operador"])
+        Layout.addWidget(self.InputCargo)
+
+        self.LblErro = QLabel("")
+        self.LblErro.setStyleSheet("color: #ff4444;")
+        Layout.addWidget(self.LblErro)
+
+        BtnCriar = QPushButton("Criar conta")
+        BtnCriar.clicked.connect(self.cadastrar)
+        Layout.addWidget(BtnCriar)
+
+        self.setLayout(Layout)
+    def cadastrar(self):
+        self.IrLogin()
+        Contas.Cadastrar(self.InputUsuario.text(),self.InputSenha.text(),self.InputCargo.currentText())
+
+#endregion Conta
 #region main ui
 class InventarioUi(QWidget):
     PAGE_SIZE = 30
@@ -672,6 +784,63 @@ class ReverterUi(QWidget):
 
         return Container
 #endregion Reverter
+#region assinatura
+class AssinaturaWidget(QWidget):
+    #qwidget onde tera a assinatura
+ 
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(800, 150)
+        self._canvas = QPixmap(800,350)
+        self._canvas.fill(QColor("#ffffff"))
+        self._ultimo_ponto = QPoint()
+        self._desenhando = False
+ 
+        # borda visual para indicar a área
+        self.setStyleSheet("border: 2px solid #005B8C; background-color: #ffffff;")
+ 
+    #eventos de mouse
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._desenhando = True
+            self._ultimo_ponto = event.position().toPoint()
+ 
+    def mouseMoveEvent(self, event):
+        if self._desenhando:
+            painter = QPainter(self._canvas)
+            pen = QPen(QColor("#000000"), 2, Qt.PenStyle.SolidLine,
+                       Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
+            painter.setPen(pen)
+            painter.drawLine(self._ultimo_ponto, event.position().toPoint())
+            painter.end()
+            self._ultimo_ponto = event.position().toPoint()
+            self.update()
+ 
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._desenhando = False
+ 
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.drawPixmap(0, 0, self._canvas)
+ 
+    #extras
+    def limpar(self):
+        self._canvas.fill(QColor("#ffffff"))
+        self.update()
+ 
+    def vazio(self) -> bool:#se não tiver nenhum pixel na tela
+        img = self._canvas.toImage()
+        for y in range(img.height()):
+            for x in range(img.width()):
+                if QColor(img.pixel(x, y)).lightness() < 200:
+                    return False
+        return True
+ 
+    def pixmap(self) -> QPixmap:
+        return self._canvas.copy()
+
+#endregion assinatura
 #region gerenciador de inventario
 class GerenciadorInventario(QWidget):
     def __init__(self,Historico, Inventario, Reverter):
@@ -754,11 +923,33 @@ class GerenciadorInventario(QWidget):
         FormLayout.addRow("Data devolução:", self.InputDevolucao)
         FormLayout.addRow("Data descarte:", self.InputDescarte)
 
+        AssinaturaLay = QVBoxLayout()
+        lbl = QLabel("Assinatura do Funcionario:")
+        lbl.setStyleSheet("color: #ffffff; border: none;")
+        AssinaturaLay.addWidget(lbl)
+ 
+        self.area = AssinaturaWidget()
+        AssinaturaLay.addWidget(self.area)
+ 
+        btn_limpar = QPushButton("Limpar assinatura")
+        btn_limpar.clicked.connect(self.area.limpar)
+        AssinaturaLay.addWidget(btn_limpar)
+        FormLayout.addRow(AssinaturaLay)
+
         BtnConfirmar = QPushButton("Adicionar item")
         BtnConfirmar.clicked.connect(self.ConfirmarAdd)
         FormLayout.addRow(BtnConfirmar)
 
         self.ConteudoLayout.addWidget(Form)
+ 
+        def pixmap(self) -> QPixmap:
+            return self.area.pixmap()
+ 
+        def vazio(self) -> bool:
+            return self.area.vazio()
+ 
+        def limpar(self):
+            self.area.limpar()
 
         #data para descarte e devolução
     def ConfirmarAdd(self):

@@ -22,9 +22,25 @@ class Contas(Base):
     __tablename__ = 'conta'
     id = Column(Integer, primary_key=True)
     Conta = Column(String(50))
+    Senha = Column(String(50))
     cargo = Column(String(50))
     InventarioId = Column(Integer, ForeignKey("Inventario.id"))  # ← adicionar isso
-    Inventario = relationship("Inventario", back_populates="contas") 
+    Inventario = relationship("Inventario", back_populates="contas")
+    def login(Usuario,senha):
+        #adicionar hash
+        logar = session.query(Contas).filter_by(Conta=Usuario,Senha=senha).all()
+        if logar:
+            return True
+        else:
+            return False
+    def Cadastrar(Usuario,Senha,Cargo):
+        conta = Contas(
+            Conta = Usuario,
+            Senha = Senha,
+            cargo = Cargo
+        )
+        session.add(conta)
+        session.commit()
 class Itens(Base):
     __tablename__ = 'itens'
 
@@ -37,6 +53,7 @@ class Itens(Base):
     TipoEpi = Column(String)
     Dono = Column(String)
     Usos = Column(JSON)
+    CriadoPor = Column(String)
     DataDescarte = Column(String)
     DataDevolucao = Column(String)
     Descartado = Column(Boolean)
@@ -304,6 +321,7 @@ class Reverter(Base):
     VersaoAnterior = Column(JSON)
     VersaoAtual = Column(JSON)
     revertido = Column(Boolean,default=False)
+
 class Historico(Base):
     #aplicar a todos os itens que forem alterados ou "removidos"
     __tablename__ = 'Historico'
@@ -325,7 +343,7 @@ def fake_data():
         inv = Inventario()
         session.add(inv)
 
-        for i in range(300):
+        for i in range(100):
             novo_item = Itens(
                 Ca=f"ca {i}",
                 CodUnico=f"cod {i}",
@@ -338,6 +356,13 @@ def fake_data():
                 Inventario=inv
             )
             session.add(novo_item)
+        session.commit()
+        conta = Contas(
+            Conta = "Lucas G",
+            senha = "123467",
+            cargo = "adm supremo"
+        )
+        session.add(conta)
         session.commit()
 
     except Exception as e:
