@@ -95,12 +95,18 @@ Canvas base do projeto:
 ---
 
 ## Ideias gerais / backlog
+- [ ] certificado de NR
+- [ ] verificar codigo de barra
+- [ ] fazer patch pois alterei/removi item e so reiniciando aplicação que ele apareceu no historico
+- [ ] funcionalidade remover conta, fazer hash das senhas e outros meios de segurança
+- [ ] assinatura digital (do funcionário)(falta salvar num documento)
+- [ ] criação de documento para mostrar que funcionario assinou e que o epi é responsabilidade dele em conjunto com a empresa
+- [ ] gerar NF para rastreabilidade
+- [ ] trocar icone conforme tipo de epi
 - [ ] Salvar assinatura digital do funcionário junto ao item no banco
 - [ ] Automatizar alertas de trocas e vencimentos (email/notificação)
 - [ ] Exclusão verdadeira automática após X meses (`DataDeletar`)
-- [ ] Hash de senha no login (bcrypt já importado)
-- [ ] Controle de permissões por cargo (admin vs operador)
 - [ ] Vender a parte de metal do cinto
 - [ ] Vender a parte têxtil do cinto
 - [ ] Avaliar novos fornecedores
-- [ ] Compilar em executável via PyInstaller
+- [ ] Compilar em executável via PyInstaller a versão final
