@@ -104,6 +104,7 @@ python Inventario.py
 | PySide6_Addons | 6.10.2 |
 | PySide6_Essentials | 6.10.2 |
 | Flask-Bcrypt | 1.0.1 |
+| bcrypt | 5.0.0 |
 | pyinstaller | 6.15.0 |
 | pyinstaller-hooks-contrib | 2025.8 |
 

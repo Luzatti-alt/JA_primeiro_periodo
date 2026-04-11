@@ -3,10 +3,10 @@
 
 a = Analysis(
     ['app\\ui\\main.py'],
-    pathex=[],
+    pathex=['.', 'app'],
     binaries=[],
     datas=[('app/ui/imgs', 'app/ui/imgs'), ('app/data', 'app/data')],
-    hiddenimports=['sqlalchemy', 'sqlalchemy.dialects.sqlite', 'pyside6', 'PySide6.QtCore', 'PySide6.QtWidgets', 'PySide6.QtGui'],
+    hiddenimports=['ui.ContasUI', 'ui.ControleInventarioUI', 'ui.InventarioUI', 'ui.HistoricoUI', 'ui.ReverterUI', 'ui.DashBoardUI', 'data.Inventario', 'sqlalchemy', 'sqlalchemy.dialects.sqlite', 'PySide6.QtCore', 'PySide6.QtWidgets', 'bcrypt', 'PySide6.QtGui'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

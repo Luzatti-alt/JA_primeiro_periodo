@@ -19,18 +19,16 @@ from data.Inventario import Contas
 
 
 class Login(QWidget):
-    SEQUENCIASECRETA = ["img", "img", "img"]  # 3 cliques no logo → CriarConta
+    SEQUENCIA_CRIAR   = ["img", "img", "img"]
+    SEQUENCIA_EXCLUIR = ["img", "nome", "img"]
+    _TAMANHO_MAX = max(len(SEQUENCIA_CRIAR), len(SEQUENCIA_EXCLUIR))
 
-    def __init__(self, Inventario, CriarConta, Usuario=None):
-        """
-        Inventario  — callable: ir para tela de inventário após login
-        CriarConta  — callable: ir para tela de criar conta
-        SetUser    — callable(int): informa ao GerenciadorJanelas qual user logou
-        """
+    def __init__(self, Inventario, CriarConta, ExcluirConta, Usuario=None):
         super().__init__()
-        self.IrInventario = Inventario
-        self.IrCriarConta = CriarConta
-        self.SetUser = Usuario           # substitui global UserLogado
+        self.IrInventario   = Inventario
+        self.IrCriarConta   = CriarConta
+        self.IrExcluirConta = ExcluirConta
+        self.SetUser        = Usuario
         self.HistoricoClick: list[str] = []
 
         Layout = QVBoxLayout()
@@ -44,10 +42,14 @@ class Login(QWidget):
         self.BtnLogo.setFlat(True)
         self.BtnLogo.setStyleSheet("border: none; background: transparent;")
         self.BtnLogo.clicked.connect(lambda: self.RegistrarClick("img"))
-        self.LblLogo = QLabel("Sistema PLACEHOARDER")
-        self.LblLogo.setFont(font)
+        self.BtnNome = QPushButton("Sistema PLACEHOARDER")
+        self.BtnNome.setFont(font)
+        self.BtnNome.setFlat(True)
+        self.BtnNome.setStyleSheet("border: none; background: transparent;")
+        self.BtnNome.clicked.connect(lambda: self.RegistrarClick("nome"))
+        self.BtnNome.setFont(font)
         logoRow.addWidget(self.BtnLogo)
-        logoRow.addWidget(self.LblLogo)
+        logoRow.addWidget(self.BtnNome)
         Layout.addLayout(logoRow)
 
         self.InputUsuario = QLineEdit()
@@ -69,8 +71,6 @@ class Login(QWidget):
 
         self.setLayout(Layout)
 
-    #
-
     def Logar(self) -> None:
         usuario = self.InputUsuario.text().strip()
         senha   = self.InputSenha.text().strip()
@@ -79,8 +79,10 @@ class Login(QWidget):
             self.LblErro.setText("Preencha todos os campos.")
             return
 
-        conta = Contas.login(usuario, senha)
-        if conta:
+        resultado = Contas.login(usuario, senha)
+        if resultado == "bloqueado":
+            self.LblErro.setText("Conta bloqueada. Tente em 15 minutos.")
+        elif resultado:
             self.LblErro.setText("")
             if self.SetUser:
                 self.SetUser(Contas.IdLogado(usuario))
@@ -90,12 +92,15 @@ class Login(QWidget):
 
     def RegistrarClick(self, nome: str) -> None:
         self.HistoricoClick.append(nome)
-        self.HistoricoClick = self.HistoricoClick[-len(self.SEQUENCIASECRETA):]
-        if self.HistoricoClick == self.SEQUENCIASECRETA:
+        self.HistoricoClick = self.HistoricoClick[-self._TAMANHO_MAX:]
+        sufixo_criar   = self.HistoricoClick[-len(self.SEQUENCIA_CRIAR):]
+        sufixo_excluir = self.HistoricoClick[-len(self.SEQUENCIA_EXCLUIR):]
+        if sufixo_criar == self.SEQUENCIA_CRIAR:
             self.HistoricoClick = []
             self.IrCriarConta()
-
-
+        elif sufixo_excluir == self.SEQUENCIA_EXCLUIR:
+            self.HistoricoClick = []
+            self.IrExcluirConta()
 class CriarConta(QWidget):
     #Acessível apenas pela sequência secreta na tela de Login
 
@@ -138,11 +143,45 @@ class CriarConta(QWidget):
             self.LblErro.setText("Preencha todos os campos.")
             return
 
-        Contas.Cadastrar(usuario, senha, cargo)
-        self.IrLogin()
+        ok = Contas.Cadastrar(usuario, senha, cargo)
+        if ok:
+            self.IrLogin()
+        else:
+            self.LblErro.setText("Usuário já existe ou cargo inválido.")
 
 
 class ExcluirContaUI(QWidget):
     def __init__(self):
         super().__init__()
-        pass
+        layout = QVBoxLayout()
+ 
+        self.ListaContas = QComboBox()
+        self.ConstruirComboItens(self.ListaContas)
+ 
+        self.LblErro = QLabel("")
+        self.LblErro.setStyleSheet("color: #ff4444;")
+ 
+        self.RemoverFuncionario = QPushButton("Remover conta")
+        self.RemoverFuncionario.clicked.connect(self.Remover)
+ 
+        layout.addWidget(self.ListaContas)
+        layout.addWidget(self.LblErro)
+        layout.addWidget(self.RemoverFuncionario)
+        self.setLayout(layout)
+ 
+    def Remover(self) -> None:
+        usuario = self.ListaContas.currentData()
+        if not usuario:
+            return
+        ok = Contas.RemoverConta(usuario)
+        if ok:
+            self.ConstruirComboItens(self.ListaContas)
+            self.LblErro.setText("")
+        else:
+            self.LblErro.setText("Erro ao remover conta.")
+ 
+    @staticmethod
+    def ConstruirComboItens(combo: QComboBox) -> None:
+        combo.clear()
+        for ItemId, nome in Contas.ListarContas():
+            combo.addItem(f"{nome} (ID: {ItemId})", userData=nome)

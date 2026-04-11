@@ -13,7 +13,7 @@ else:
 sys.path.insert(0, str(root))
 
 #modulos/ui especificas
-from ui.ContasUI import Login, CriarConta
+from ui.ContasUI import Login, CriarConta, ExcluirContaUI
 from ui.InventarioUI import InventarioUi
 from ui.ReverterUI import ReverterUi
 from ui.HistoricoUI import HistoricoUi
@@ -37,6 +37,9 @@ CORES = {
 
 def ConfigurarApp(app: QApplication) -> None:
     paleta = QPalette()
+
+    check_nao = resource_path('app/ui/imgs/check-nao.png').replace("\\", "/")
+    check_ok  = resource_path('app/ui/imgs/check-ok.png').replace("\\", "/")
     paleta.setColor(QPalette.ColorRole.Window, QColor(CORES["fundo"]))
     app.setPalette(paleta)
 
@@ -60,12 +63,12 @@ def ConfigurarApp(app: QApplication) -> None:
             border: 2px solid {CORES['botao']};
             border-radius: 3px;
             background-color: {CORES['botao']};
-            image: url({resource_path('app/ui/imgs/check-nao.png')});
+            image: url({check_nao});
         }}
         QCheckBox::indicator:checked {{
             background-color: {CORES['texto']};
             border: 2px solid {CORES['texto']};
-            image: url({resource_path('app/ui/imgs/check-ok.png')});
+            image: url({check_ok});
         }}
     """)
 
@@ -94,6 +97,7 @@ class GerenciadorJanelas(QWidget):
             Inventario=self.IrInventario,
             CriarConta=self.IrCriarConta,
             Usuario=self.SetUser,        # callback para guardar o user logado
+            ExcluirConta = self.IrExcluirConta
         )
         self.CriarConta      = CriarConta(Login=self.IrLogin)
         self.Inventario       = InventarioUi(
@@ -118,11 +122,13 @@ class GerenciadorJanelas(QWidget):
             Reverter=self.IrReverter,
             Usuario=self.GetUser,
         )
+        self.ExcluirConta = ExcluirContaUI()  
 
         for tela in (
             self.Login, self.CriarConta,
             self.Inventario, self.Reverter,
-            self.Historico,self.Gerenciar
+            self.Historico, self.Gerenciar,
+            self.ExcluirConta,
         ):
             self.Stacked.addWidget(tela)
 
@@ -163,6 +169,10 @@ class GerenciadorJanelas(QWidget):
 
     def IrCriarConta(self) -> None:
         self.IrPara(self.CriarConta)
+    def IrExcluirConta(self) -> None:
+        self.ExcluirConta.ConstruirComboItens(self.ExcluirConta.ListaContas)
+        self.IrPara(self.ExcluirConta)
+
 
     def IrInventario(self) -> None:
         self.Inventario.AtualizarListaItens()

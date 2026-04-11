@@ -206,18 +206,17 @@ class GerenciadorInventario(QWidget):
 
     def ConfirmarAdd(self) -> None:
         if not self.InputCa.text().strip() or not self.InputDono.text().strip():
-            # TODO: substituir por QMessageBox.warning
             return
 
         InventarioFuncionalidade().AddItem(
             registro=self.User(),
             ca=self.InputCa.text().strip(),
             Registrodata=str(QDate.currentDate().toPython()),
-            tipoEpi=self.InputTipo.currentText(),
+            tipo_epi=self.InputTipo.currentText(),              # ← era tipoEpi
             dono=self.InputDono.text().strip(),
             usos=[u.strip() for u in self.InputUsos.text().split(",") if u.strip()],
-            dataDescarte=str(self.InputDescarte.date().toPython()),
-            dataDevolucao=str(self.InputDevolucao.date().toPython()),
+            data_descarte=str(self.InputDescarte.date().toPython()),    # ← era dataDescarte
+            data_devolucao=str(self.InputDevolucao.date().toPython()),  # ← era dataDevolucao
         )
         self.IrInventario()
 
@@ -306,14 +305,14 @@ class GerenciadorInventario(QWidget):
     def ConfirmarEdicao(self) -> None:
         ItemId = self.ComboEdit.currentData()
         InventarioFuncionalidade().EditItem(
-            self.User(),
-            ItemId,
-            self.EditCa.text().strip(),
-            self.EditTipo.currentText(),
-            self.EditDono.text().strip(),
-            [u.strip() for u in self.EditUsos.text().split(",") if u.strip()],
-            str(self.EditDevolucao.date().toPython()),
-            str(self.EditDescarte.date().toPython()),
+            self.User(),                                                    # registro
+            ItemId,                                                         # Id
+            self.EditCa.text().strip(),                                     # Ca
+            self.EditTipo.currentText(),                                    # TipoEpi
+            self.EditDono.text().strip(),                                   # Dono
+            [u.strip() for u in self.EditUsos.text().split(",") if u.strip()], # Usos
+            str(self.EditDevolucao.date().toPython()),                      # DataDev
+            str(self.EditDescarte.date().toPython()),                       # DataDesc
         )
         self.IrInventario()
 

@@ -3,8 +3,7 @@
 from sqlalchemy import or_, create_engine, Column, Integer, String, JSON, Boolean, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import *
-import logging
-from flask_bcrypt import Bcrypt
+import bcrypt as _bcrypt
 import os
 import sys
 #endregion imports
@@ -16,40 +15,43 @@ if getattr(sys, 'frozen', False):
 else:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DbPath = os.path.join(BASE_DIR, "GuindastesRibasDB.db")
-engine = create_engine(f'sqlite:///{DbPath}', echo=True)
-bcrypt = Bcrypt() #criptografia
-logging.basicConfig()
-logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+engine = create_engine(f'sqlite:///{DbPath}')
+
 
 #fazer algo para localmente não ser facil de achar conta e afins
 class Contas(Base):
     __tablename__ = 'conta'
     id = Column(Integer, primary_key=True)
     Conta = Column(String(50))
-    Senha = Column(String(50))
+    Senha = Senha = Column(String(255))
     cargo = Column(String(50))#para o caso de expandir para api/caso futuramente o funcionario tiver
     #a opção de ver os seus epi via app
     InventarioId = Column(Integer, ForeignKey("Inventario.id")) 
     Inventario = relationship("Inventario", back_populates="contas")
+    def ListarContas():
+        contas = session.query(Contas).all()
+        return [(c.id, c.Conta) for c in contas]
     def RemoverConta(Usuario):
-        Conta = session.query(Contas).filter_by(Conta=Usuario).all()
-        session.delete(Conta)
-        return True #feedback para a UI
-    def login(Usuario,senha):
-        #adicionar hash
-        logar = session.query(Contas).filter_by(Conta=Usuario,Senha=senha).all()
-        if logar:
+        conta = session.query(Contas).filter_by(Conta=Usuario).first()
+        if conta:
+            session.delete(conta)
+            session.commit()
             return True
-        else:
-            return False
+        return False
+    def login(Usuario, senha):
+        conta = session.query(Contas).filter_by(Conta=Usuario).first()
+        if conta and _bcrypt.checkpw(senha.encode(), conta.Senha.encode()):
+            return True
+        return False
     def IdLogado(Usuario):
         conta = session.query(Contas).filter_by(Conta=Usuario).first()
         return conta.id if conta else None
-    def Cadastrar(Usuario,Senha,Cargo)->None:
+    def Cadastrar(Usuario, Senha, Cargo) -> None:
+        hash_senha = _bcrypt.hashpw(Senha.encode(), _bcrypt.gensalt()).decode()
         conta = Contas(
-            Conta = Usuario,
-            Senha = Senha,
-            cargo = Cargo
+            Conta=Usuario,
+            Senha=hash_senha,
+            cargo=Cargo
         )
         session.add(conta)
         session.commit()
@@ -432,9 +434,6 @@ def fake_data():
 Base.metadata.create_all(engine)  
 Session = sessionmaker(bind=engine)
 session = Session()
-log_path = os.path.join(BASE_DIR, 'db.log')
-log = logging.FileHandler(filename=log_path, encoding='utf-8', mode='w')
-logging.getLogger("sqlalchemy.engine").addHandler(log)
 if __name__ == '__main__':
     #auto atualizar o db
     if os.path.exists('GuindastesRibasDB.db'):
