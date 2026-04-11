@@ -3,6 +3,7 @@ from sqlalchemy import or_, create_engine, Column, Integer, String, JSON, Boolea
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import *
 import logging
+from flask_bcrypt import Bcrypt
 import os
 import sys
 
@@ -14,6 +15,7 @@ else:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DbPath = os.path.join(BASE_DIR, "GuindastesRibasDB.db")
 engine = create_engine(f'sqlite:///{DbPath}', echo=True)
+bcrypt = Bcrypt() #criptografia
 logging.basicConfig()
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 #region DB_config
@@ -33,6 +35,9 @@ class Contas(Base):
             return True
         else:
             return False
+    def IdLogado(Usuario):
+        conta = session.query(Contas).filter_by(Conta=Usuario).first()
+        return conta.id if conta else None
     def Cadastrar(Usuario,Senha,Cargo):
         conta = Contas(
             Conta = Usuario,
@@ -45,7 +50,6 @@ class Itens(Base):
     __tablename__ = 'itens'
 
     id = Column(Integer, primary_key=True)
-    CadastradoPor = Column(String(50))
     Visivel = Column(Boolean,default=True)#qnd "excluir" so ira fazer com que nao apareca
     #isso por 6 meses 1²anos algo assim dps disso não precisaria do dado de qualquer forma
     Ca = Column(String)
@@ -56,6 +60,7 @@ class Itens(Base):
     CriadoPor = Column(String)
     DataDescarte = Column(String)
     DataDevolucao = Column(String)
+    DataRegistro = Column(String)
     Descartado = Column(Boolean)
     InventarioId = Column(Integer, ForeignKey("Inventario.id"))
     Inventario = relationship("Inventario", back_populates="itens")
@@ -80,8 +85,6 @@ class Inventario(Base):
 #gerenciador com tempo/com data
 class GerenciadorTemporal():
     def __init__(self):
-        #DataAtual = date.day()
-        #print(DataAtual)
         pass
     def ConferirValDev(self):
         #ve se esta valido ou se já era para ser devolvido
@@ -99,8 +102,6 @@ class GerenciadorTemporal():
             except (ValueError, TypeError):
                 pass
         return alertas
-
-        pass
     def ExclusaoVerdadeira(self):
         #apos x meses ele ira deletar no db
         pass
@@ -138,7 +139,6 @@ class InventarioFuncionalidade():
         """Conta total de itens visíveis no banco (sem carregar todos)."""
         return session.query(Itens).filter_by(Visivel=True).count()
 
-        return self._cache_itens
     def GerarCodUnico(self, item):
         parte_dono = item.Dono[:3].upper()
         parte_ca = item.Ca[:4]
@@ -149,16 +149,22 @@ class InventarioFuncionalidade():
         CodUnico = f"{parte_dono}{parte_ca}{desc[6:8]}{devo[6:8]}"
 
         item.CodUnico = CodUnico
-    def AddItem(self, ca, tipo_epi, dono, usos, data_descarte, data_devolucao): #add class de itens_como tipo
+    
+    def AddItem(self,Registrodata,registro, ca, tipo_epi, dono, usos, data_descarte, data_devolucao): #add class de itens_como tipo
         inv = session.query(Inventario).first()
+        conta = session.query(Contas).filter_by(id=registro).first()
+        nome_criador = conta.Conta if conta else str(registro)
+
         NovoItemInventario = Itens(
             Ca=ca,
             TipoEpi=tipo_epi,
             Dono=dono,
             Usos=usos,
+            DataRegistro  = Registrodata,
             DataDescarte=data_descarte,
             DataDevolucao=data_devolucao,
             Visivel=True,
+            CriadoPor = nome_criador,
             Descartado=False,
             Inventario=inv
             )
@@ -166,22 +172,41 @@ class InventarioFuncionalidade():
         self.GerarCodUnico(NovoItemInventario)
         session.commit()
         self._cache_itens = None
-    def RemItem(self,id):
-        itens = session.query(Itens).filter_by(id=id).all()
+    
+    def RemItem(self,id,registro):
+        itens = session.query(Itens).filter_by(id=id)
         if itens:
-            item = itens[0]
-            item.Visivel = False
-            #criar data para a verdadeira remoção
+            conta = session.query(Contas).filter_by(id=registro).first()
+            nome_criador = conta.Conta if conta else str(registro)
+            estado_anterior = {"Visivel": True}
+            estado_novo     = {"Visivel": False}
+            
+            itens.Visivel = False
+
+            Inv = session.query(Inventario).first()
+            session.add(Historico(
+                Inventario_id=Inv.id,
+                IdItemAlterado=id,
+                TiposAlteracao="remocao",
+                VersaoAnterior=estado_anterior,
+                VersaoAtual=estado_novo,
+                QuemAlterou=nome_criador
+            ))
             session.commit()
             self._cache_itens = None
+    
     def RemListaFuncionarios(self):
         itens = session.query(Itens).filter_by(Visivel=True).all()
         #criar listas separadas e juntar com zip desorderna isso
         return [(item.id, item.Dono) for item in itens]#nova lista mantendo ordem
+    
     def SelFuncionario(self,ID):
         return session.query(Itens).filter_by(id=ID).first()
-    def EditItem(self, Id, Ca, TipoEpi, Dono, Usos, DataDev, DataDesc):
+    
+    def EditItem(self,registro, Id, Ca, TipoEpi, Dono, Usos, DataDev, DataDesc):
         Item = session.query(Itens).filter_by(id=Id).first()
+        conta = session.query(Contas).filter_by(id=registro).first()
+        nome_criador = conta.Conta if conta else str(registro)
         if Item:
             try:
                 # salva estado anterior antes de alterar
@@ -199,7 +224,8 @@ class InventarioFuncionalidade():
                     "Dono": Dono,
                     "Usos": Usos,
                     "DataDevolucao": DataDev,
-                    "DataDescarte": DataDesc
+                    "DataDescarte": DataDesc,
+                    "QuemALterou": nome_criador
                 }
                 # aplica alteração
                 Item.Ca = Ca
@@ -216,6 +242,7 @@ class InventarioFuncionalidade():
                     TiposAlteracao="edicao",
                     VersaoAnterior=EstadoAnterior,
                     VersaoAtual=EstadoNovo,
+                    QuemAlterou = nome_criador,
                     revertido=False
                 )
                 RegistroHistorico = Historico(
@@ -223,6 +250,7 @@ class InventarioFuncionalidade():
                     IdItemAlterado=Id,
                     TiposAlteracao="edicao",
                     VersaoAnterior=EstadoAnterior,
+                    QuemAlterou = nome_criador,
                     VersaoAtual=EstadoNovo
                 )
                 session.add(Registro)
@@ -237,6 +265,7 @@ class InventarioFuncionalidade():
             except Exception as E:
                 session.rollback()
                 print(f"Erro ao editar: {E}")   
+    
     def EditListaFuncionarios(self):
         itens = session.query(Itens).filter_by(Visivel=True).all()
         #criar listas separadas e juntar com zip desorderna isso
@@ -260,18 +289,37 @@ class InventarioFuncionalidade():
                 Itens.Descartado.like(f"%{pesquisar}%")
                 )).all()
         return ItemPesquisado
-    def descartearItem(self,id,state):
+    #melhorar o historico para quem alterou a em qualquer mudança de itens dalvar no historioco
+    #isso esta parcialmente integrado
+    def descartearItem(self,id,state,registro):
         item = session.query(Itens).filter_by(id=id).first()
+        conta = session.query(Contas).filter_by(id=registro).first()
+        nome_criador = conta.Conta if conta else str(registro)#add em historico a alteração
         item.Descartado = state
         #add alteração no outro banco de dados
+        estado_anterior = {"Descartado": item.Descartado}
+        estado_novo     = {"Descartado": state}
+
+        Inv = session.query(Inventario).first()
+        session.add(Historico(
+            Inventario_id=Inv.id,
+            IdItemAlterado=id,
+            TiposAlteracao="descarte",
+            VersaoAnterior=estado_anterior,
+            VersaoAtual=estado_novo,
+            QuemAlterou=nome_criador
+            ))
         session.commit()
         self._cache_itens = None
         return f"item foi descartado"
-    def ReverterItem(self, Id, State):
+    
+    def ReverterItem(self, Id, State,registro):
         try:
             Registro = session.query(Reverter).filter_by(id=Id).first()
             if not Registro:
                 return "registro não encontrado"
+            conta = session.query(Contas).filter_by(id=registro).first()
+            nome_criador = conta.Conta if conta else str(registro)
 
             Registro.revertido = State
         
@@ -305,6 +353,7 @@ class InventarioFuncionalidade():
             session.rollback()
             return "erro ao reverter"
         return f"item foi alterado"
+    
     def ItensReverter(self):
         return session.query(Reverter).all()
     
@@ -320,6 +369,7 @@ class Reverter(Base):
     TiposAlteracao = Column(String(50))
     VersaoAnterior = Column(JSON)
     VersaoAtual = Column(JSON)
+    QuemAlterou = Column(String)
     revertido = Column(Boolean,default=False)
 
 class Historico(Base):
@@ -331,6 +381,7 @@ class Historico(Base):
     IdItemAlterado = Column(Integer)
     TiposAlteracao = Column(String(50))
     VersaoAnterior = Column(JSON)
+    QuemAlterou = Column(String)
     VersaoAtual = Column(JSON)
 # criar sessão ANTES de usar
 Session = sessionmaker(bind=engine)
@@ -343,7 +394,7 @@ def fake_data():
         inv = Inventario()
         session.add(inv)
 
-        for i in range(100):
+        for i in range(3):
             novo_item = Itens(
                 Ca=f"ca {i}",
                 CodUnico=f"cod {i}",

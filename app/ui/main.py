@@ -59,7 +59,10 @@ app.setStyleSheet(f"""
 Imagens = {
     "capacete": "imagens/capacete.png"
 }
+global UserLogado
+UserLogado = None
 #endregion base projeto
+
 #region gerenciador interfaces graficas
 class GerenciadorJanelas(QWidget):
     def __init__(self):
@@ -151,6 +154,7 @@ class Login(QWidget):
         self.setLayout(Layout)
 
     def Logar(self):
+        #add user logado como global
         usuario = self.Username.text().strip()
         senha = self.Senha.text().strip()
 
@@ -159,8 +163,11 @@ class Login(QWidget):
             return
 
         conta = Contas.login(usuario,senha)
+        global UserLogado
         if conta:
             self.LblErro.setText("")
+            UserLogado = Contas.IdLogado(usuario)
+            print(f"\n\n\nUser Logado id: {UserLogado}\n\n\n")
             self.IrInventario()
         else:
             self.LblErro.setText("Usuário ou senha incorretos.")
@@ -740,7 +747,7 @@ class ReverterUi(QWidget):
 
         self.ListaItensLayout.addStretch()
     def ReverterEAtualizar(self, Id, Checked):
-        InventarioFuncionalidade().ReverterItem(Id, Checked)
+        InventarioFuncionalidade().ReverterItem(Id, Checked,UserLogado)
         self.AtualizarReverter()
     def CriarLinhaItem(self, Item) -> QWidget:
 
@@ -955,11 +962,14 @@ class GerenciadorInventario(QWidget):
     def ConfirmarAdd(self):
         if not self.InputCa.text() or not self.InputDono.text():
             return #trocar para uma caixa de alert
+        DataHoje = QDate.currentDate()
         DataDev = self.InputDevolucao.date().toPython()
         DataDesc = self.InputDescarte.date().toPython()
 
         InventarioFuncionalidade().AddItem(
+            registro=UserLogado,
             ca=self.InputCa.text(),
+            Registrodata=str(DataHoje),
             tipo_epi=self.InputTipo.currentText(),
             dono=self.InputDono.text(),
             usos=[uso.strip() for uso in self.InputUsos.text().split(",")],
@@ -984,7 +994,7 @@ class GerenciadorInventario(QWidget):
             return
         Texto = self.ListaFuncionario.currentText()
         ItemId = int(Texto.split("ID: ")[1].split(" ")[0])# extrai o id do texto
-        InventarioFuncionalidade().RemItem(ItemId)
+        InventarioFuncionalidade().RemItem(ItemId,UserLogado)
         self.IrInventario()
 
     def Edit(self):
@@ -1049,6 +1059,7 @@ class GerenciadorInventario(QWidget):
         Texto = self.ListaFuncionario.currentText()
         self.ItemIdEdicao = int(Texto.split("ID: ")[1].split(" ")[0])
         InventarioFuncionalidade().EditItem(
+            UserLogado,
             self.ItemIdEdicao,
             self.InputCa.text(),
             self.InputTipo.currentText(),
