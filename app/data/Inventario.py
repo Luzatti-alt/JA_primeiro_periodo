@@ -31,9 +31,10 @@ class Contas(Base):
     #a opção de ver os seus epi via app
     InventarioId = Column(Integer, ForeignKey("Inventario.id")) 
     Inventario = relationship("Inventario", back_populates="contas")
-    def RemoverConta():
-        #adicionar isso dps
-        pass
+    def RemoverConta(Usuario):
+        Conta = session.query(Contas).filter_by(Conta=Usuario).all()
+        session.delete(Conta)
+        return True #feedback para a UI
     def login(Usuario,senha):
         #adicionar hash
         logar = session.query(Contas).filter_by(Conta=Usuario,Senha=senha).all()
@@ -44,7 +45,7 @@ class Contas(Base):
     def IdLogado(Usuario):
         conta = session.query(Contas).filter_by(Conta=Usuario).first()
         return conta.id if conta else None
-    def Cadastrar(Usuario,Senha,Cargo):
+    def Cadastrar(Usuario,Senha,Cargo)->None:
         conta = Contas(
             Conta = Usuario,
             Senha = Senha,
@@ -73,7 +74,7 @@ class Itens(Base):
     DataDeletar = Column(String())#livrar espaço de itens que ja estão marcados como removidos faz tempo
     #decorator para funcionar melhor
     @property
-    def usos_formatado(self):
+    def Usosformatado(self):
         if isinstance(self.Usos, list):
             return ", ".join(self.Usos)
         return str(self.Usos) if self.Usos else ""
@@ -168,11 +169,10 @@ class InventarioFuncionalidade():
             .all()
         )
  
-    def TotalItens(self):
-        """Conta total de itens visíveis no banco (sem carregar todos)."""
+    def TotalItens(self):#Conta total de itens visíveis no banco (sem carregar todos).
         return session.query(Itens).filter_by(Visivel=True).count()
 
-    def GerarCodUnico(self, item):
+    def GerarCodUnico(self, item)->None:
         parte_dono = item.Dono[:3].upper()
         parte_ca = item.Ca[:4]
 
@@ -183,7 +183,7 @@ class InventarioFuncionalidade():
 
         item.CodUnico = CodUnico
     
-    def AddItem(self,Registrodata,registro, ca, tipo_epi, dono, usos, data_descarte, data_devolucao): #add class de itens_como tipo
+    def AddItem(self,Registrodata,registro, ca, tipo_epi, dono, usos, data_descarte, data_devolucao)->None:
         inv = session.query(Inventario).first()
         conta = session.query(Contas).filter_by(id=registro).first()
         nome_criador = conta.Conta if conta else str(registro)
@@ -206,7 +206,7 @@ class InventarioFuncionalidade():
         session.commit()
         self._cache_itens = None
     
-    def RemItem(self,id,registro):
+    def RemItem(self,id,registro)->None:
         itens = session.query(Itens).filter_by(id=id)
         if itens:
             conta = session.query(Contas).filter_by(id=registro).first()
@@ -230,13 +230,12 @@ class InventarioFuncionalidade():
     
     def RemListaFuncionarios(self):
         itens = session.query(Itens).filter_by(Visivel=True).all()
-        #criar listas separadas e juntar com zip desorderna isso
         return [(item.id, item.Dono) for item in itens]#nova lista mantendo ordem
     
     def SelFuncionario(self,ID):
         return session.query(Itens).filter_by(id=ID).first()
     
-    def EditItem(self,registro, Id, Ca, TipoEpi, Dono, Usos, DataDev, DataDesc):
+    def EditItem(self,registro, Id, Ca, TipoEpi, Dono, Usos, DataDev, DataDesc)->None:
         Item = session.query(Itens).filter_by(id=Id).first()
         conta = session.query(Contas).filter_by(id=registro).first()
         nome_criador = conta.Conta if conta else str(registro)
@@ -301,14 +300,12 @@ class InventarioFuncionalidade():
     
     def EditListaFuncionarios(self):
         itens = session.query(Itens).filter_by(Visivel=True).all()
-        #criar listas separadas e juntar com zip desorderna isso
         return [(item.id, item.Dono) for item in itens]#nova lista mantendo ordem
+    
     #add funcao que se for invisivel e der x meses ele realmente deletar do db
     def pesquisar(self,pesquisar):
         #ilike(case sensitive) like(insensitive)
-        '''
-        %texto% encontra qualquer valor que contenha o termo buscado.
-        '''
+        #%texto% encontra qualquer valor que contenha o termo buscado.
         ItemPesquisado = session.query(Itens).filter(
             #pesquisa em todos as colunas do sqlalchemy
             or_(
@@ -322,6 +319,7 @@ class InventarioFuncionalidade():
                 Itens.Descartado.like(f"%{pesquisar}%")
                 )).all()
         return ItemPesquisado
+    
     #melhorar o historico para quem alterou a em qualquer mudança de itens dalvar no historioco
     #isso esta parcialmente integrado
     def descartearItem(self,id,state,registro):
@@ -329,7 +327,6 @@ class InventarioFuncionalidade():
         conta = session.query(Contas).filter_by(id=registro).first()
         nome_criador = conta.Conta if conta else str(registro)#add em historico a alteração
         item.Descartado = state
-        #add alteração no outro banco de dados
         estado_anterior = {"Descartado": item.Descartado}
         estado_novo     = {"Descartado": state}
 
@@ -356,7 +353,7 @@ class InventarioFuncionalidade():
 
             Registro.revertido = State
         
-            if State:  # se marcou para reverter, restaura o item
+            if State:  #restaura o item
                 Item = session.query(Itens).filter_by(id=Registro.IdItemAlterado).first()
                 if Item and Registro.VersaoAnterior:
                     Anterior = Registro.VersaoAnterior  # é um dict JSON
@@ -366,7 +363,7 @@ class InventarioFuncionalidade():
                     Item.Usos = Anterior.get("Usos", Item.Usos)
                     Item.DataDevolucao = Anterior.get("DataDevolucao", Item.DataDevolucao)
                     Item.DataDescarte = Anterior.get("DataDescarte", Item.DataDescarte)
-            else:  # se desmarcou, restaura para o estado novo
+            else:  #restaura para o estado novo
                 Item = session.query(Itens).filter_by(id=Registro.IdItemAlterado).first()
                 if Item and Registro.VersaoAtual:
                     Atual = Registro.VersaoAtual
@@ -376,8 +373,7 @@ class InventarioFuncionalidade():
                     Item.Usos = Atual.get("Usos", Item.Usos)
                     Item.DataDevolucao = Atual.get("DataDevolucao", Item.DataDevolucao)
                     Item.DataDescarte = Atual.get("DataDescarte", Item.DataDescarte)
-        
-            #apagar do db
+
             Registro.revertido = True
             session.commit()
             self._cache_itens = None
@@ -385,7 +381,6 @@ class InventarioFuncionalidade():
         except Exception as E:
             session.rollback()
             return "erro ao reverter"
-        return f"item foi alterado"
     
     def ItensReverter(self):
         return session.query(Reverter).all()
@@ -400,7 +395,6 @@ session = Session()
 #endregion funcionalidades
 
 #region fake_data
-
 #temporario até a aplicação ser finalizada
 def fake_data():
     try:

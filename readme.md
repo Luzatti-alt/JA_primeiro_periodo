@@ -109,10 +109,6 @@ python Inventario.py
 
 ---
 
-## Documentação
-Canvas base do projeto:
-![Canvas base](./PROJECT-MODEL-CANVAS-modelo-A3-em-branco.png)
-
 ---
 
 ## Ideias gerais / backlog

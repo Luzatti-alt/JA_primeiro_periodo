@@ -1,1 +1,1 @@
- python3.13 -m PyInstaller --onedir --windowed --add-data "app/ui/imgs;app/ui/imgs" --add-data "app/data;data" --hidden-import sqlalchemy --hidden-import pyside6 app/ui/main.py
+ python3.13 -m PyInstaller --onedir --windowed --name "SistemaInventario" --icon "app/ui/imgs/ideia_de_logo_app_JA.ico" --add-data "app/ui/imgs;app/ui/imgs" --add-data "app/data;app/data"--hidden-import sqlalchemy --hidden-import sqlalchemy.dialects.sqlite --hidden-import pyside6 --hidden-import PySide6.QtCore --hidden-import PySide6.QtWidgets --hidden-import PySide6.QtGui app/ui/main.py
