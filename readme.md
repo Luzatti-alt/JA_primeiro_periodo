@@ -23,13 +23,34 @@ Estruturar o fluxo correto de descarte de Equipamentos de Proteção Individual 
 ---
 
 ## Estrutura do projeto
+
+```
+Codigo fonte
+
 app/
 ├── data/
-│   ├── init.py
+│   ├── __init__.py
 │   └── Inventario.py       # modelos ORM e lógica de negócio
+│   └── CodigoBarras.py     # ainda tem que implementar 
+│   └── db.log              #logs de alterações do db
+│   └── Inventario.py       # banco de dados dos testes
 └── ui/
-├── main.py         # interface gráfica PySide6
-└── imgs/               # ícones e imagens da UI
+│   ├── __main__.py         # interface gráfica PySide6
+│   └── imgs/               # ícones e imagens da UI
+│       └── ...             # conjunto de imagens que aparece na interface grafica
+└── docs/                   #aqui sera onde gerencia documentos e onde ficara armazenado
+
+Outros
+
+executavel/                 #onde fiara o app compilado via pyinstaller
+├── build/                  #arquivos gerado por pyinstaller
+└── dist/                   #arquivos gerado por pyinstaller
+
+build.txt                  #comando usado para buildar o app
+main.spec                  #onde fiara o app compilado via pyinstaller
+readme.md                  #este arquivo
+requirements.txt           #baixar as dependencias do app
+```
 
 ---
 
