@@ -1,4 +1,5 @@
 #region base do sistema
+#region imports
 from sqlalchemy import or_, create_engine, Column, Integer, String, JSON, Boolean, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import *
@@ -6,8 +7,9 @@ import logging
 from flask_bcrypt import Bcrypt
 import os
 import sys
+#endregion imports
 
-# config BD
+#region DB_config
 Base = declarative_base()
 if getattr(sys, 'frozen', False):
     BASE_DIR = os.path.dirname(sys.executable)  # pasta do .exe
@@ -18,16 +20,20 @@ engine = create_engine(f'sqlite:///{DbPath}', echo=True)
 bcrypt = Bcrypt() #criptografia
 logging.basicConfig()
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
-#region DB_config
-#dps trocar para contas internamente no meio do pyinstaller ou algo para localmente não ser facil de achar conta e afins
+
+#fazer algo para localmente não ser facil de achar conta e afins
 class Contas(Base):
     __tablename__ = 'conta'
     id = Column(Integer, primary_key=True)
     Conta = Column(String(50))
     Senha = Column(String(50))
-    cargo = Column(String(50))
-    InventarioId = Column(Integer, ForeignKey("Inventario.id"))  # ← adicionar isso
+    cargo = Column(String(50))#para o caso de expandir para api/caso futuramente o funcionario tiver
+    #a opção de ver os seus epi via app
+    InventarioId = Column(Integer, ForeignKey("Inventario.id")) 
     Inventario = relationship("Inventario", back_populates="contas")
+    def RemoverConta():
+        #adicionar isso dps
+        pass
     def login(Usuario,senha):
         #adicionar hash
         logar = session.query(Contas).filter_by(Conta=Usuario,Senha=senha).all()
@@ -71,9 +77,32 @@ class Itens(Base):
         if isinstance(self.Usos, list):
             return ", ".join(self.Usos)
         return str(self.Usos) if self.Usos else ""
-#endregion DB_config
-#endregion base do sistema
-#region funcionalidades
+
+class Reverter(Base):
+    #aplicar a todos os itens que forem alterados ou "removidos"
+    __tablename__ = 'Reverter'
+    id = Column(Integer, primary_key=True)
+    Inventario_id = Column(Integer, ForeignKey("Inventario.id"))
+    Inventario = relationship("Inventario", back_populates="Reverter")
+    IdItemAlterado = Column(Integer)
+    TiposAlteracao = Column(String(50))
+    VersaoAnterior = Column(JSON)
+    VersaoAtual = Column(JSON)
+    QuemAlterou = Column(String)
+    revertido = Column(Boolean,default=False)
+
+class Historico(Base):
+    #aplicar a todos os itens que forem alterados ou "removidos"
+    __tablename__ = 'Historico'
+    id = Column(Integer, primary_key=True)
+    Inventario_id = Column(Integer, ForeignKey("Inventario.id"))
+    Inventario = relationship("Inventario", back_populates="Historico")
+    IdItemAlterado = Column(Integer)
+    TiposAlteracao = Column(String(50))
+    VersaoAnterior = Column(JSON)
+    QuemAlterou = Column(String)
+    VersaoAtual = Column(JSON)
+
 class Inventario(Base):
     __tablename__ = 'Inventario'
     id = Column(Integer, primary_key=True)
@@ -82,7 +111,11 @@ class Inventario(Base):
     Historico = relationship("Historico", back_populates="Inventario")
     contas = relationship("Contas", back_populates="Inventario")
 
-#gerenciador com tempo/com data
+#endregion DB_config
+
+#endregion base do sistema
+
+#region funcionalidades
 class GerenciadorTemporal():
     def __init__(self):
         pass
@@ -105,7 +138,7 @@ class GerenciadorTemporal():
     def ExclusaoVerdadeira(self):
         #apos x meses ele ira deletar no db
         pass
-#gerenciador geral
+
 class InventarioFuncionalidade():
     def __init__(self):
         self._cache_itens = None
@@ -359,36 +392,16 @@ class InventarioFuncionalidade():
     
     def ItensHistorico(self):
         return session.query(Historico).all()
-class Reverter(Base):
-    #aplicar a todos os itens que forem alterados ou "removidos"
-    __tablename__ = 'Reverter'
-    id = Column(Integer, primary_key=True)
-    Inventario_id = Column(Integer, ForeignKey("Inventario.id"))
-    Inventario = relationship("Inventario", back_populates="Reverter")
-    IdItemAlterado = Column(Integer)
-    TiposAlteracao = Column(String(50))
-    VersaoAnterior = Column(JSON)
-    VersaoAtual = Column(JSON)
-    QuemAlterou = Column(String)
-    revertido = Column(Boolean,default=False)
 
-class Historico(Base):
-    #aplicar a todos os itens que forem alterados ou "removidos"
-    __tablename__ = 'Historico'
-    id = Column(Integer, primary_key=True)
-    Inventario_id = Column(Integer, ForeignKey("Inventario.id"))
-    Inventario = relationship("Inventario", back_populates="Historico")
-    IdItemAlterado = Column(Integer)
-    TiposAlteracao = Column(String(50))
-    VersaoAnterior = Column(JSON)
-    QuemAlterou = Column(String)
-    VersaoAtual = Column(JSON)
 # criar sessão ANTES de usar
 Session = sessionmaker(bind=engine)
 session = Session()
 
 #endregion funcionalidades
+
 #region fake_data
+
+#temporario até a aplicação ser finalizada
 def fake_data():
     try:
         inv = Inventario()
@@ -420,6 +433,8 @@ def fake_data():
         session.rollback()
         print(f'Erro ao criar dados de debug: {e}')
 #endregion
+
+#region rodar
 Base.metadata.create_all(engine)  
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -433,3 +448,4 @@ if __name__ == '__main__':
     fake_data()
     Base.metadata.create_all(engine)
     GerenciadorTemporal()
+#endregion rodar
