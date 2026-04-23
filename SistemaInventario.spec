@@ -5,7 +5,7 @@ a = Analysis(
     ['app\\ui\\main.py'],
     pathex=['.', 'app'],
     binaries=[],
-    datas=[('app/ui/imgs', 'app/ui/imgs'), ('app/data', 'app/data')],
+    datas=[('app/ui/imgs', 'app/ui/imgs'), ('app/data', 'app/data'), ('app/data', 'app/data/assinaturas')],
     hiddenimports=['ui.ContasUI', 'ui.ControleInventarioUI', 'ui.InventarioUI', 'ui.HistoricoUI', 'ui.ReverterUI', 'ui.DashBoardUI', 'data.Inventario', 'sqlalchemy', 'sqlalchemy.dialects.sqlite', 'PySide6.QtCore', 'PySide6.QtWidgets', 'bcrypt', 'PySide6.QtGui'],
     hookspath=[],
     hooksconfig={},

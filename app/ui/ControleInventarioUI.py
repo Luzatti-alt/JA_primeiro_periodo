@@ -16,6 +16,17 @@ else:
 sys.path.insert(0, str(root))
 from data.Inventario import InventarioFuncionalidade
 #endregion base projeto
+def _pasta_assinaturas() -> Path:
+    #Retorna o caminho correto para a pasta 'assinaturas',
+    if getattr(sys, 'frozen', False):
+        # diretório onde o .exe está — gravável
+        base = Path(sys.executable).parent
+    else:
+        base = Path(__file__).parent.parent  # raiz do projeto
+
+    pasta = base / "assinaturas"
+    pasta.mkdir(exist_ok=True)
+    return pasta
 
 # Widget de assinatura
 
@@ -63,7 +74,7 @@ class AssinaturaWidget(QWidget):
         self.update()
 
     def vazio(self) -> bool:
-        """Retorna True se nenhum pixel escuro foi desenhado."""
+        #Retorna True se nenhum pixel escuro foi desenhado.
         img = self.Canvas.toImage()
         for y in range(img.height()):
             for x in range(img.width()):
@@ -73,6 +84,12 @@ class AssinaturaWidget(QWidget):
 
     def pixmap(self) -> QPixmap:
         return self.Canvas.copy()
+    
+    def SalvarAssinatura(self, nome_func: str, data: str, caminho: str = "") -> bool:
+        #Salva a assinatura como PNG. Retorna True se salvou com sucesso.
+        if not caminho:
+            caminho = f"{nome_func}_{data}_assinatura.png"
+        return self.Canvas.save(caminho, "PNG")
 
 # Gerenciador de inventário (add / rem / edit)
 
@@ -84,7 +101,7 @@ TIPOSEPI = [
 
 
 class GerenciadorInventario(QWidget):
-    def __init__(self, Historico, Inventario, Reverter, Usuario=None):
+    def __init__(self, Historico, Inventario,Dashboard, Reverter, Usuario=None):
         """
         Usuario — callable() → int | None: retorna o id do usuário logado
                    (substitui o global UserLogado)
@@ -101,6 +118,8 @@ class GerenciadorInventario(QWidget):
         self.BtnEdit       = QPushButton("Editar")
         self.BtnReverter   = QPushButton("Reverter")
         self.BtnHistorico  = QPushButton("Histórico")
+        self.BtnDashboard = QPushButton("Dashboards")
+        self.BtnDashboard.clicked.connect(Dashboard)
 
         self.BtnInventario.clicked.connect(self.IrInventario)
         self.BtnReverter.clicked.connect(self.IrReverter)
@@ -113,6 +132,7 @@ class GerenciadorInventario(QWidget):
         for Btn in (
             self.BtnInventario, self.BtnAdd, self.BtnRem,
             self.BtnEdit, self.BtnReverter, self.BtnHistorico,
+            self.BtnDashboard,
         ):
             topo.addWidget(Btn)
 
@@ -207,17 +227,30 @@ class GerenciadorInventario(QWidget):
     def ConfirmarAdd(self) -> None:
         if not self.InputCa.text().strip() or not self.InputDono.text().strip():
             return
+        ca   = self.InputCa.text().strip()
+        dono = self.InputDono.text().strip()
+        data = str(QDate.currentDate().toPython())
+
 
         InventarioFuncionalidade().AddItem(
             registro=self.User(),
-            ca=self.InputCa.text().strip(),
+            ca=ca,
             Registrodata=str(QDate.currentDate().toPython()),
             tipo_epi=self.InputTipo.currentText(),              # ← era tipoEpi
-            dono=self.InputDono.text().strip(),
+            dono=dono,
             usos=[u.strip() for u in self.InputUsos.text().split(",") if u.strip()],
-            data_descarte=str(self.InputDescarte.date().toPython()),    # ← era dataDescarte
-            data_devolucao=str(self.InputDevolucao.date().toPython()),  # ← era dataDevolucao
+            data_descarte=str(self.InputDescarte.date().toPython()),
+            data_devolucao=str(self.InputDevolucao.date().toPython()),
         )
+        if not self.AreaAssinatura.vazio():
+            pasta = _pasta_assinaturas()
+
+            self.AreaAssinatura.SalvarAssinatura(
+                nome_func=dono,
+                data=data,
+                caminho=f"data/assinaturas/{dono}_{data}.png",
+            )
+
         self.IrInventario()
 
     #tela: Remover

@@ -18,6 +18,7 @@ from ui.InventarioUI import InventarioUi
 from ui.ReverterUI import ReverterUi
 from ui.HistoricoUI import HistoricoUi
 from ui.ControleInventarioUI import GerenciadorInventario
+from ui.DashBoardUI import Dashboard,DashBoardUi
 
 def resource_path(relative_path: str) -> str:
     base = getattr(sys, '_MEIPASS', Path(__file__).parent.parent)
@@ -104,23 +105,33 @@ class GerenciadorJanelas(QWidget):
             Historico=self.IrHistorico,
             Reverter=self.IrReverter,
             Gerenciar=self.IrGerenciar,
+            Dashboard= self.IrDashboard
         )
         self.Reverter         = ReverterUi(
             Historico=self.IrHistorico,
             Inventario=self.IrInventario,
             Gerenciar=self.IrGerenciar,
+            Dashboard= self.IrDashboard,
             Usuario=self.GetUser,        # callback para ler user logado
         )
         self.Historico        = HistoricoUi(
             Reverter=self.IrReverter,
             Inventario=self.IrInventario,
             Gerenciar=self.IrGerenciar,
+            Dashboard= self.IrDashboard,
         )
         self.Gerenciar = GerenciadorInventario(
             Historico=self.IrHistorico,
             Inventario=self.IrInventario,
             Reverter=self.IrReverter,
+            Dashboard= self.IrDashboard,
             Usuario=self.GetUser,
+        )
+        self.Dashboard = DashBoardUi(
+            Historico=self.IrHistorico,
+            Inventario=self.IrInventario,
+            Gerenciar=self.IrGerenciar,
+            Reverter=self.IrReverter
         )
         self.ExcluirConta = ExcluirContaUI()  
 
@@ -128,7 +139,7 @@ class GerenciadorJanelas(QWidget):
             self.Login, self.CriarConta,
             self.Inventario, self.Reverter,
             self.Historico, self.Gerenciar,
-            self.ExcluirConta,
+            self.ExcluirConta,self.Dashboard,
         ):
             self.Stacked.addWidget(tela)
 
@@ -169,6 +180,10 @@ class GerenciadorJanelas(QWidget):
 
     def IrCriarConta(self) -> None:
         self.IrPara(self.CriarConta)
+
+    def IrDashboard(self) -> None:
+        self.IrPara(self.Dashboard)
+
     def IrExcluirConta(self) -> None:
         self.ExcluirConta.ConstruirComboItens(self.ExcluirConta.ListaContas)
         self.IrPara(self.ExcluirConta)

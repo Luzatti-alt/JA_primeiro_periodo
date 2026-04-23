@@ -3,12 +3,12 @@
 from sqlalchemy import or_, create_engine, Column, Integer, String, JSON, Boolean, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import *
-import bcrypt as _bcrypt
+import bcrypt as Brycpt
 import os
 import sys
 #endregion imports
 
-#region DB_config
+#region Db Config
 Base = declarative_base()
 if getattr(sys, 'frozen', False):
     BASE_DIR = os.path.dirname(sys.executable)  # pasta do .exe
@@ -38,19 +38,19 @@ class Contas(Base):
             session.commit()
             return True
         return False
-    def login(Usuario, senha):
+    def login(Usuario, Senha):
         conta = session.query(Contas).filter_by(Conta=Usuario).first()
-        if conta and _bcrypt.checkpw(senha.encode(), conta.Senha.encode()):
+        if conta and Brycpt.checkpw(Senha.encode(), conta.Senha.encode()):
             return True
         return False
     def IdLogado(Usuario):
         conta = session.query(Contas).filter_by(Conta=Usuario).first()
         return conta.id if conta else None
     def Cadastrar(Usuario, Senha, Cargo) -> None:
-        hash_senha = _bcrypt.hashpw(Senha.encode(), _bcrypt.gensalt()).decode()
+        HashSenha = Brycpt.hashpw(Senha.encode(), Brycpt.gensalt()).decode()
         conta = Contas(
             Conta=Usuario,
-            Senha=hash_senha,
+            Senha=HashSenha,
             cargo=Cargo
         )
         session.add(conta)
@@ -85,7 +85,7 @@ class Reverter(Base):
     #aplicar a todos os itens que forem alterados ou "removidos"
     __tablename__ = 'Reverter'
     id = Column(Integer, primary_key=True)
-    Inventario_id = Column(Integer, ForeignKey("Inventario.id"))
+    InventarioId = Column(Integer, ForeignKey("Inventario.id"))
     Inventario = relationship("Inventario", back_populates="Reverter")
     IdItemAlterado = Column(Integer)
     TiposAlteracao = Column(String(50))
@@ -98,7 +98,7 @@ class Historico(Base):
     #aplicar a todos os itens que forem alterados ou "removidos"
     __tablename__ = 'Historico'
     id = Column(Integer, primary_key=True)
-    Inventario_id = Column(Integer, ForeignKey("Inventario.id"))
+    InventarioId = Column(Integer, ForeignKey("Inventario.id"))
     Inventario = relationship("Inventario", back_populates="Historico")
     IdItemAlterado = Column(Integer)
     TiposAlteracao = Column(String(50))
@@ -114,7 +114,7 @@ class Inventario(Base):
     Historico = relationship("Historico", back_populates="Inventario")
     contas = relationship("Contas", back_populates="Inventario")
 
-#endregion DB_config
+#endregion Db Config
 
 #endregion base do sistema
 
@@ -213,18 +213,29 @@ class InventarioFuncionalidade():
         if itens:
             conta = session.query(Contas).filter_by(id=registro).first()
             nome_criador = conta.Conta if conta else str(registro)
-            estado_anterior = {"Visivel": True}
-            estado_novo     = {"Visivel": False}
+            EstadoAnterior = {"Visivel": True}
+            EstadoNovo     = {"Visivel": False}
             
             itens.Visivel = False
 
             Inv = session.query(Inventario).first()
+            #add
+
+            session.add(Reverter(
+                    InventarioId=Inv.id,
+                    IdItemAlterado=id,
+                    TiposAlteracao="edicao",
+                    VersaoAnterior=EstadoAnterior,
+                    VersaoAtual=EstadoNovo,
+                    QuemAlterou = nome_criador,
+                    revertido=False
+                ))
             session.add(Historico(
-                Inventario_id=Inv.id,
+                InventarioId=Inv.id,
                 IdItemAlterado=id,
                 TiposAlteracao="remocao",
-                VersaoAnterior=estado_anterior,
-                VersaoAtual=estado_novo,
+                VersaoAnterior=EstadoAnterior,
+                VersaoAtual=EstadoNovo,
                 QuemAlterou=nome_criador
             ))
             session.commit()
@@ -271,7 +282,7 @@ class InventarioFuncionalidade():
                 # registra no Reverter
                 Inv = session.query(Inventario).first()
                 Registro = Reverter(
-                    Inventario_id=Inv.id,
+                    InventarioId=Inv.id,
                     IdItemAlterado=Id,
                     TiposAlteracao="edicao",
                     VersaoAnterior=EstadoAnterior,
@@ -280,7 +291,7 @@ class InventarioFuncionalidade():
                     revertido=False
                 )
                 RegistroHistorico = Historico(
-                    Inventario_id=Inv.id,
+                    InventarioId=Inv.id,
                     IdItemAlterado=Id,
                     TiposAlteracao="edicao",
                     VersaoAnterior=EstadoAnterior,
@@ -329,16 +340,16 @@ class InventarioFuncionalidade():
         conta = session.query(Contas).filter_by(id=registro).first()
         nome_criador = conta.Conta if conta else str(registro)#add em historico a alteração
         item.Descartado = state
-        estado_anterior = {"Descartado": item.Descartado}
-        estado_novo     = {"Descartado": state}
+        EstadoAnterior = {"Descartado": item.Descartado}
+        EstadoNovo     = {"Descartado": state}
 
         Inv = session.query(Inventario).first()
         session.add(Historico(
-            Inventario_id=Inv.id,
+            InventarioId=Inv.id,
             IdItemAlterado=id,
             TiposAlteracao="descarte",
-            VersaoAnterior=estado_anterior,
-            VersaoAtual=estado_novo,
+            VersaoAnterior=EstadoAnterior,
+            VersaoAtual=EstadoNovo,
             QuemAlterou=nome_criador
             ))
         session.commit()
@@ -419,7 +430,7 @@ def fake_data():
         session.commit()
         conta = Contas(
             Conta = "Lucas G",
-            senha = "123467",
+            Senha = "123467",
             cargo = "adm supremo"
         )
         session.add(conta)

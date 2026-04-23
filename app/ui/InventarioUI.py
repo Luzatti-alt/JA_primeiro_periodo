@@ -24,7 +24,7 @@ def resource_path(relative_path):
 class InventarioUi(QWidget):
     PAGESIZE = 30
 
-    def __init__(self,Historico, Reverter, Gerenciar):
+    def __init__(self,Historico, Reverter, Gerenciar,Dashboard):
         super().__init__()
 
         #optimização da query e melhoria da experiencia do usuario
@@ -45,11 +45,14 @@ class InventarioUi(QWidget):
         ReverterBotao.clicked.connect(Reverter)
         BtnHistorico = QPushButton("Historico")
         BtnHistorico.clicked.connect(Historico)
+        BtnDashboard = QPushButton("Dashboards")
+        BtnDashboard.clicked.connect(Dashboard)
         TopoLayout.addWidget(AddItem)
         TopoLayout.addWidget(RemItem)
         TopoLayout.addWidget(EditItem)
         TopoLayout.addWidget(ReverterBotao)
         TopoLayout.addWidget(BtnHistorico)
+        TopoLayout.addWidget(BtnDashboard)
 
         #inventario na ui
 
