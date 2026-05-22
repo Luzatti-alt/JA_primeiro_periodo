@@ -335,7 +335,7 @@ class InventarioFuncionalidade():
     
     #melhorar o historico para quem alterou a em qualquer mudança de itens dalvar no historioco
     #isso esta parcialmente integrado
-    def descartearItem(self,id,state,registro):
+    def descartarItem(self,id,state,registro):
         item = session.query(Itens).filter_by(id=id).first()
         conta = session.query(Contas).filter_by(id=registro).first()
         nome_criador = conta.Conta if conta else str(registro)#add em historico a alteração

@@ -24,9 +24,9 @@ def resource_path(relative_path):
 class InventarioUi(QWidget):
     PAGESIZE = 30
 
-    def __init__(self,Historico, Reverter, Gerenciar,Dashboard):
+    def __init__(self,Historico, Reverter, Gerenciar,Dashboard,ControleFuncionarios,Usuario):
         super().__init__()
-
+        self.Usuario = Usuario
         #optimização da query e melhoria da experiencia do usuario
         self.Offset = 0          # quantos itens já carregados
         self.Total = 0           # total no banco
@@ -47,12 +47,15 @@ class InventarioUi(QWidget):
         BtnHistorico.clicked.connect(Historico)
         BtnDashboard = QPushButton("Dashboards")
         BtnDashboard.clicked.connect(Dashboard)
+        BtnControleFuncionarios = QPushButton("ControleFuncionarios")
+        BtnControleFuncionarios.clicked.connect(ControleFuncionarios)
         TopoLayout.addWidget(AddItem)
         TopoLayout.addWidget(RemItem)
         TopoLayout.addWidget(EditItem)
         TopoLayout.addWidget(ReverterBotao)
         TopoLayout.addWidget(BtnHistorico)
         TopoLayout.addWidget(BtnDashboard)
+        TopoLayout.addWidget(BtnControleFuncionarios)
 
         #inventario na ui
 
@@ -283,7 +286,7 @@ class InventarioUi(QWidget):
         CbLay.setContentsMargins(0,0,0,0)
         Cb = QCheckBox()
         Cb.setChecked(Item.Descartado or False)
-        Cb.clicked.connect(lambda Checked, Id=Item.id: InventarioFuncionalidade().descartearItem(Id, Checked))
+        Cb.clicked.connect(lambda Checked, Id=Item.id: InventarioFuncionalidade().descartarItem(Id, Checked,self.Usuario()))
         CbLay.addWidget(Cb, alignment=Qt.AlignmentFlag.AlignCenter)
         Layout.addWidget(CbContainer)
 

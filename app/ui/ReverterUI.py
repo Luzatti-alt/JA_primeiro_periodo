@@ -18,7 +18,7 @@ from data.Inventario import InventarioFuncionalidade
 
 
 class ReverterUi(QWidget):
-    def __init__(self, Historico, Inventario, Gerenciar,Dashboard, Usuario=None):
+    def __init__(self, Historico, Inventario, Gerenciar,ControleFuncionarios,Dashboard, Usuario=None):
         """
         Usuario — callable() → int | None: retorna o id do usuário logado
                    (substitui o global UserLogado)
@@ -29,12 +29,13 @@ class ReverterUi(QWidget):
         #topo
         topo = QHBoxLayout()
         for texto, acao in [
-            ("Inventário",              Inventario),
+            ("Inventário", Inventario),
             ("Adicionar do inventário", lambda: Gerenciar("add")),
-            ("Remover do inventário",   lambda: Gerenciar("rem")),
-            ("Editar o inventário",     lambda: Gerenciar("edit")),
-            ("Histórico",               Historico),
-            ("Dashboard",               Dashboard),
+            ("Remover do inventário", lambda: Gerenciar("rem")),
+            ("Editar o inventário", lambda: Gerenciar("edit")),
+            ("Histórico", Historico),
+            ("Dashboard", Dashboard),
+            ("ControleFuncionarios", ControleFuncionarios)
         ]:
             btn = QPushButton(texto)
             btn.clicked.connect(acao)

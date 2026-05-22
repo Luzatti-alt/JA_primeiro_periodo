@@ -101,7 +101,7 @@ TIPOSEPI = [
 
 
 class GerenciadorInventario(QWidget):
-    def __init__(self, Historico, Inventario,Dashboard, Reverter, Usuario=None):
+    def __init__(self, Historico, Inventario,Dashboard, Reverter,ControleFuncionarios, Usuario=None):
         """
         Usuario — callable() → int | None: retorna o id do usuário logado
                    (substitui o global UserLogado)
@@ -120,6 +120,9 @@ class GerenciadorInventario(QWidget):
         self.BtnHistorico  = QPushButton("Histórico")
         self.BtnDashboard = QPushButton("Dashboards")
         self.BtnDashboard.clicked.connect(Dashboard)
+        self.BtnControleFuncionarios = QPushButton("ControleFuncionarios")
+        self.BtnControleFuncionarios.clicked.connect(ControleFuncionarios)
+        
 
         self.BtnInventario.clicked.connect(self.IrInventario)
         self.BtnReverter.clicked.connect(self.IrReverter)
@@ -132,7 +135,7 @@ class GerenciadorInventario(QWidget):
         for Btn in (
             self.BtnInventario, self.BtnAdd, self.BtnRem,
             self.BtnEdit, self.BtnReverter, self.BtnHistorico,
-            self.BtnDashboard,
+            self.BtnDashboard,self.BtnControleFuncionarios
         ):
             topo.addWidget(Btn)
 
@@ -210,7 +213,7 @@ class GerenciadorInventario(QWidget):
         assinaturaLay = QVBoxLayout()
         LblAss = QLabel("Assinatura do Funcionário:")
         LblAss.setStyleSheet("color: #ffffff; border: none;")
-        self.AreaAssinatura = AssinaturaWidget()
+        self.AreaAssinatura = AssinaturaWidget()#deixar tamanho responsivo
         BtnLimparAss = QPushButton("Limpar assinatura")
         BtnLimparAss.clicked.connect(self.AreaAssinatura.limpar)
         assinaturaLay.addWidget(LblAss)

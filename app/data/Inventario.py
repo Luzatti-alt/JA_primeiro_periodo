@@ -1,8 +1,8 @@
 #region base do sistema
 #region imports
-from sqlalchemy import or_, create_engine, Column, Integer, String, JSON, Boolean, ForeignKey
+from sqlalchemy import or_, create_engine, Column, Integer, String, JSON, Boolean, ForeignKey, func
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
-from datetime import *
+from datetime import date, datetime, timedelta
 import bcrypt as Brycpt
 import os
 import sys
@@ -18,19 +18,21 @@ DbPath = os.path.join(BASE_DIR, "GuindastesRibasDB.db")
 engine = create_engine(f'sqlite:///{DbPath}')
 
 
-#fazer algo para localmente não ser facil de achar conta e afins
 class Contas(Base):
     __tablename__ = 'conta'
     id = Column(Integer, primary_key=True)
     Conta = Column(String(50))
-    Senha = Senha = Column(String(255))
+    Senha = Column(String(255))
     cargo = Column(String(50))#para o caso de expandir para api/caso futuramente o funcionario tiver
     #a opção de ver os seus epi via app
-    InventarioId = Column(Integer, ForeignKey("Inventario.id")) 
+    
+    InventarioId = Column(Integer, ForeignKey("Inventario.id"))
     Inventario = relationship("Inventario", back_populates="contas")
+
     def ListarContas():
         contas = session.query(Contas).all()
         return [(c.id, c.Conta) for c in contas]
+
     def RemoverConta(Usuario):
         conta = session.query(Contas).filter_by(Conta=Usuario).first()
         if conta:
@@ -38,29 +40,40 @@ class Contas(Base):
             session.commit()
             return True
         return False
+
     def login(Usuario, Senha):
         conta = session.query(Contas).filter_by(Conta=Usuario).first()
         if conta and Brycpt.checkpw(Senha.encode(), conta.Senha.encode()):
             return True
         return False
+
     def IdLogado(Usuario):
         conta = session.query(Contas).filter_by(Conta=Usuario).first()
         return conta.id if conta else None
+
     def Cadastrar(Usuario, Senha, Cargo) -> None:
         HashSenha = Brycpt.hashpw(Senha.encode(), Brycpt.gensalt()).decode()
-        conta = Contas(
-            Conta=Usuario,
-            Senha=HashSenha,
-            cargo=Cargo
-        )
+        conta = Contas(Conta=Usuario, Senha=HashSenha, cargo=Cargo)
         session.add(conta)
         session.commit()
+
+
+class Funcionarios(Base):
+    __tablename__ = 'Funcionarios'
+    id = Column(Integer, primary_key=True)
+    Nome = Column(String(70))
+    Email = Column(String(70))
+    ListaEpiAtual = Column(JSON)
+    ListaDevAtrasadas = Column(JSON)
+    QuantidadeDevAtrasadas = Column(Integer)
+    ListaDevEmDia = Column(JSON)
+    QuantidadeDevEmDia = Column(Integer)
+
+
 class Itens(Base):
     __tablename__ = 'itens'
-
     id = Column(Integer, primary_key=True)
-    Visivel = Column(Boolean,default=True)#qnd "excluir" so ira fazer com que nao apareca
-    #isso por 6 meses 1²anos algo assim dps disso não precisaria do dado de qualquer forma
+    Visivel = Column(Boolean, default=True)
     Ca = Column(String)
     CodUnico = Column(String)
     TipoEpi = Column(String)
@@ -69,20 +82,21 @@ class Itens(Base):
     CriadoPor = Column(String)
     DataDescarte = Column(String)
     DataDevolucao = Column(String)
+    DataDevolvido = Column(String)
     DataRegistro = Column(String)
-    Descartado = Column(Boolean)
+    Descartado = Column(Boolean, default=False)
     InventarioId = Column(Integer, ForeignKey("Inventario.id"))
     Inventario = relationship("Inventario", back_populates="itens")
-    DataDeletar = Column(String())#livrar espaço de itens que ja estão marcados como removidos faz tempo
-    #decorator para funcionar melhor
+    DataDeletar = Column(String())
+
     @property
     def Usosformatado(self):
         if isinstance(self.Usos, list):
             return ", ".join(self.Usos)
         return str(self.Usos) if self.Usos else ""
 
+
 class Reverter(Base):
-    #aplicar a todos os itens que forem alterados ou "removidos"
     __tablename__ = 'Reverter'
     id = Column(Integer, primary_key=True)
     InventarioId = Column(Integer, ForeignKey("Inventario.id"))
@@ -92,10 +106,10 @@ class Reverter(Base):
     VersaoAnterior = Column(JSON)
     VersaoAtual = Column(JSON)
     QuemAlterou = Column(String)
-    revertido = Column(Boolean,default=False)
+    revertido = Column(Boolean, default=False)
+
 
 class Historico(Base):
-    #aplicar a todos os itens que forem alterados ou "removidos"
     __tablename__ = 'Historico'
     id = Column(Integer, primary_key=True)
     InventarioId = Column(Integer, ForeignKey("Inventario.id"))
@@ -105,6 +119,9 @@ class Historico(Base):
     VersaoAnterior = Column(JSON)
     QuemAlterou = Column(String)
     VersaoAtual = Column(JSON)
+    # novo: timestamp automático para facilitar filtros por data no dashboard
+    DataAlteracao = Column(String, default=lambda: date.today().isoformat())
+
 
 class Inventario(Base):
     __tablename__ = 'Inventario'
@@ -115,41 +132,57 @@ class Inventario(Base):
     contas = relationship("Contas", back_populates="Inventario")
 
 #endregion Db Config
-
 #endregion base do sistema
 
 #region funcionalidades
 class GerenciadorTemporal():
     def __init__(self):
         pass
+
     def ConferirValDev(self):
-        #ve se esta valido ou se já era para ser devolvido
+        """Retorna lista de (item, status, dias_restantes) para alertas."""
         hoje = date.today()
-        itens = session.query(Itens).filter_by(Visivel=True,Descartado=False).all()
+        itens = session.query(Itens).filter_by(Visivel=True, Descartado=False).all()
         alertas = []
         for item in itens:
             try:
                 devolucao = date.fromisoformat(item.DataDevolucao)
                 dias = (devolucao - hoje).days
                 if dias < 0:
-                    alertas.append((item, "atrasado", dias))
+                    alertas.append((item, "atrasado", abs(dias)))
                 elif dias <= 7:
                     alertas.append((item, "proximo", dias))
             except (ValueError, TypeError):
                 pass
         return alertas
+
     def ExclusaoVerdadeira(self):
-        #apos x meses ele ira deletar no db
-        pass
+        """Deleta permanentemente itens invisíveis com DataDeletar vencida (1 ano)."""
+        hoje = date.today()
+        itens = session.query(Itens).filter_by(Visivel=False).all()
+        removidos = 0
+        for item in itens:
+            if item.DataDeletar:
+                try:
+                    data_del = date.fromisoformat(item.DataDeletar)
+                    if hoje >= data_del:
+                        session.delete(item)
+                        removidos += 1
+                except (ValueError, TypeError):
+                    pass
+        if removidos:
+            session.commit()
+        return removidos
+
 
 class InventarioFuncionalidade():
+    #optimizar query e usabilidade do usuario
+    
     def __init__(self):
         self._cache_itens = None
-
-    #optimizar query e usabilidade do usuario
     PAGE_SIZE = 30
- 
-    def ItensTotais(self, force=False):#somente os visiveis(que seriam aqueles não deletados)
+
+    def ItensTotais(self, force=False):
         if self._cache_itens is None or force:
             self._cache_itens = (
                 session.query(Itens)
@@ -158,9 +191,8 @@ class InventarioFuncionalidade():
                 .all()
             )
         return self._cache_itens
- 
+
     def ItensPaginados(self, offset=0, limit=None):
-        """Retorna itens visíveis com paginação. Usado para lazy loading no scroll."""
         if limit is None:
             limit = self.PAGE_SIZE
         return (
@@ -170,236 +202,334 @@ class InventarioFuncionalidade():
             .limit(limit)
             .all()
         )
- 
-    def TotalItens(self):#Conta total de itens visíveis no banco (sem carregar todos).
+
+    def TotalItens(self):
         return session.query(Itens).filter_by(Visivel=True).count()
 
-    def GerarCodUnico(self, item)->None:
-        parte_dono = item.Dono[:3].upper()
-        parte_ca = item.Ca[:4]
+    def SelFuncionario(self, ID):
+        return session.query(Itens).filter_by(id=ID).first()
 
-        desc = item.DataDescarte.replace("-", "")
-        devo = item.DataDevolucao.replace("-", "")
-
-        CodUnico = f"{parte_dono}{parte_ca}{desc[6:8]}{devo[6:8]}"
-
-        item.CodUnico = CodUnico
-    
-    def AddItem(self,Registrodata,registro, ca, tipo_epi, dono, usos, data_descarte, data_devolucao)->None:
-        inv = session.query(Inventario).first()
-        conta = session.query(Contas).filter_by(id=registro).first()
-        nome_criador = conta.Conta if conta else str(registro)
-
-        NovoItemInventario = Itens(
-            Ca=ca,
-            TipoEpi=tipo_epi,
-            Dono=dono,
-            Usos=usos,
-            DataRegistro  = Registrodata,
-            DataDescarte=data_descarte,
-            DataDevolucao=data_devolucao,
-            Visivel=True,
-            CriadoPor = nome_criador,
-            Descartado=False,
-            Inventario=inv
-            )
-        session.add(NovoItemInventario)
-        self.GerarCodUnico(NovoItemInventario)
-        session.commit()
-        self._cache_itens = None
-    
-    def RemItem(self,id,registro)->None:
-        itens = session.query(Itens).filter_by(id=id)
-        if itens:
-            conta = session.query(Contas).filter_by(id=registro).first()
-            nome_criador = conta.Conta if conta else str(registro)
-            EstadoAnterior = {"Visivel": True}
-            EstadoNovo     = {"Visivel": False}
-            
-            itens.Visivel = False
-
-            Inv = session.query(Inventario).first()
-            #add
-
-            session.add(Reverter(
-                    InventarioId=Inv.id,
-                    IdItemAlterado=id,
-                    TiposAlteracao="edicao",
-                    VersaoAnterior=EstadoAnterior,
-                    VersaoAtual=EstadoNovo,
-                    QuemAlterou = nome_criador,
-                    revertido=False
-                ))
-            session.add(Historico(
-                InventarioId=Inv.id,
-                IdItemAlterado=id,
-                TiposAlteracao="remocao",
-                VersaoAnterior=EstadoAnterior,
-                VersaoAtual=EstadoNovo,
-                QuemAlterou=nome_criador
-            ))
-            session.commit()
-            self._cache_itens = None
-    
     def RemListaFuncionarios(self):
         itens = session.query(Itens).filter_by(Visivel=True).all()
-        return [(item.id, item.Dono) for item in itens]#nova lista mantendo ordem
-    
-    def SelFuncionario(self,ID):
-        return session.query(Itens).filter_by(id=ID).first()
-    
-    def EditItem(self,registro, Id, Ca, TipoEpi, Dono, Usos, DataDev, DataDesc)->None:
-        Item = session.query(Itens).filter_by(id=Id).first()
-        conta = session.query(Contas).filter_by(id=registro).first()
-        nome_criador = conta.Conta if conta else str(registro)
-        if Item:
-            try:
-                # salva estado anterior antes de alterar
-                EstadoAnterior = {
-                    "Ca": Item.Ca,
-                    "TipoEpi": Item.TipoEpi,
-                    "Dono": Item.Dono,
-                    "Usos": Item.Usos,
-                    "DataDevolucao": Item.DataDevolucao,
-                    "DataDescarte": Item.DataDescarte
-                }
-                EstadoNovo = {
-                    "Ca": Ca,
-                    "TipoEpi": TipoEpi,
-                    "Dono": Dono,
-                    "Usos": Usos,
-                    "DataDevolucao": DataDev,
-                    "DataDescarte": DataDesc,
-                    "QuemALterou": nome_criador
-                }
-                # aplica alteração
-                Item.Ca = Ca
-                Item.TipoEpi = TipoEpi
-                Item.Dono = Dono
-                Item.Usos = Usos
-                Item.DataDevolucao = DataDev
-                Item.DataDescarte = DataDesc
-                # registra no Reverter
-                Inv = session.query(Inventario).first()
-                Registro = Reverter(
-                    InventarioId=Inv.id,
-                    IdItemAlterado=Id,
-                    TiposAlteracao="edicao",
-                    VersaoAnterior=EstadoAnterior,
-                    VersaoAtual=EstadoNovo,
-                    QuemAlterou = nome_criador,
-                    revertido=False
-                )
-                RegistroHistorico = Historico(
-                    InventarioId=Inv.id,
-                    IdItemAlterado=Id,
-                    TiposAlteracao="edicao",
-                    VersaoAnterior=EstadoAnterior,
-                    QuemAlterou = nome_criador,
-                    VersaoAtual=EstadoNovo
-                )
-                session.add(Registro)
-                session.add(RegistroHistorico)
-                session.commit()
-                session.flush()  # garante ID
+        return [(item.id, item.Dono) for item in itens]
 
-                self.GerarCodUnico(Item)
-
-                session.commit()
-                self._cache_itens = None
-            except Exception as E:
-                session.rollback()
-                print(f"Erro ao editar: {E}")   
-    
     def EditListaFuncionarios(self):
         itens = session.query(Itens).filter_by(Visivel=True).all()
-        return [(item.id, item.Dono) for item in itens]#nova lista mantendo ordem
-    
-    #add funcao que se for invisivel e der x meses ele realmente deletar do db
-    def pesquisar(self,pesquisar):
-        #ilike(case sensitive) like(insensitive)
-        #%texto% encontra qualquer valor que contenha o termo buscado.
-        ItemPesquisado = session.query(Itens).filter(
-            #pesquisa em todos as colunas do sqlalchemy
+        return [(item.id, item.Dono) for item in itens]
+
+    def pesquisar(self, pesquisar):
+        return session.query(Itens).filter(
             or_(
                 Itens.Ca.like(f"%{pesquisar}%"),
                 Itens.CodUnico.like(f"%{pesquisar}%"),
                 Itens.TipoEpi.like(f"%{pesquisar}%"),
                 Itens.Dono.like(f"%{pesquisar}%"),
-                Itens.Usos.like(f"%{pesquisar}%"),
                 Itens.DataDescarte.like(f"%{pesquisar}%"),
                 Itens.DataDevolucao.like(f"%{pesquisar}%"),
-                Itens.Descartado.like(f"%{pesquisar}%")
-                )).all()
-        return ItemPesquisado
-    
-    #melhorar o historico para quem alterou a em qualquer mudança de itens dalvar no historioco
-    #isso esta parcialmente integrado
-    def descartearItem(self,id,state,registro):
-        item = session.query(Itens).filter_by(id=id).first()
-        conta = session.query(Contas).filter_by(id=registro).first()
-        nome_criador = conta.Conta if conta else str(registro)#add em historico a alteração
-        item.Descartado = state
-        EstadoAnterior = {"Descartado": item.Descartado}
-        EstadoNovo     = {"Descartado": state}
+            )
+        ).filter_by(Visivel=True).all()
 
-        Inv = session.query(Inventario).first()
+    def ItensReverter(self):
+        return session.query(Reverter).filter_by(revertido=False).all()
+
+    def ItensHistorico(self):
+        return session.query(Historico).all()
+
+    # ── código único ──────────────────────────────────────────────────────────
+
+    def GerarCodUnico(self, item) -> None:
+        parte_dono = (item.Dono or "XXX")[:3].upper()
+        parte_ca   = (item.Ca   or "0000")[:4]
+        desc = (item.DataDescarte  or "0000-00-00").replace("-", "")
+        devo = (item.DataDevolucao or "0000-00-00").replace("-", "")
+        item.CodUnico = f"{parte_dono}{parte_ca}{desc[6:8]}{devo[6:8]}"
+
+    # ── escrita ───────────────────────────────────────────────────────────────
+
+    def _nome_conta(self, registro_id: int) -> str:
+        conta = session.query(Contas).filter_by(id=registro_id).first()
+        return conta.Conta if conta else str(registro_id)
+
+    def _inv(self):
+        inv = session.query(Inventario).first()
+        if not inv:
+            inv = Inventario()
+            session.add(inv)
+            session.commit()
+        return inv
+
+    def AddItem(self, Registrodata, registro, ca, tipo_epi, dono, usos,
+                data_descarte, data_devolucao) -> None:
+        inv = self._inv()
+        nome = self._nome_conta(registro)
+        novo = Itens(
+            Ca=ca,
+            TipoEpi=tipo_epi,
+            Dono=dono,
+            Usos=usos,
+            DataRegistro=Registrodata,
+            DataDescarte=data_descarte,
+            DataDevolucao=data_devolucao,
+            Visivel=True,
+            CriadoPor=nome,
+            Descartado=False,
+            Inventario=inv,
+        )
+        session.add(novo)
+        session.flush()           # garante ID antes de gerar código
+        self.GerarCodUnico(novo)
+
+        # registros de auditoria
+        estado = {
+            "Ca": ca, "TipoEpi": tipo_epi, "Dono": dono,
+            "Usos": usos, "DataDescarte": data_descarte,
+            "DataDevolucao": data_devolucao,
+        }
+        inv_id = inv.id
+        session.add(Reverter(
+            InventarioId=inv_id, IdItemAlterado=novo.id,
+            TiposAlteracao="adicao", VersaoAnterior={}, VersaoAtual=estado,
+            QuemAlterou=nome, revertido=False,
+        ))
         session.add(Historico(
-            InventarioId=Inv.id,
-            IdItemAlterado=id,
-            TiposAlteracao="descarte",
-            VersaoAnterior=EstadoAnterior,
-            VersaoAtual=EstadoNovo,
-            QuemAlterou=nome_criador
-            ))
+            InventarioId=inv_id, IdItemAlterado=novo.id,
+            TiposAlteracao="adicao", VersaoAnterior={}, VersaoAtual=estado,
+            QuemAlterou=nome,
+            DataAlteracao=date.today().isoformat(),
+        ))
         session.commit()
         self._cache_itens = None
-        return f"item foi descartado"
-    
-    def ReverterItem(self, Id, State,registro):
+
+    def RemItem(self, id, registro) -> None:
+        # BUGFIX: era .filter_by(...) sem .first() — query object não tem .Visivel
+        item = session.query(Itens).filter_by(id=id).first()
+        if not item:
+            return
+        nome = self._nome_conta(registro)
+        estado_anterior = {"Visivel": True}
+        estado_novo     = {"Visivel": False}
+
+        item.Visivel   = False
+        # define data real de exclusão: 1 ano a partir de hoje
+        item.DataDeletar = (date.today() + timedelta(days=365)).isoformat()
+
+        inv_id = self._inv().id
+        session.add(Reverter(
+            InventarioId=inv_id, IdItemAlterado=id,
+            TiposAlteracao="remocao", VersaoAnterior=estado_anterior,
+            VersaoAtual=estado_novo, QuemAlterou=nome, revertido=False,
+        ))
+        session.add(Historico(
+            InventarioId=inv_id, IdItemAlterado=id,
+            TiposAlteracao="remocao", VersaoAnterior=estado_anterior,
+            VersaoAtual=estado_novo, QuemAlterou=nome,
+            DataAlteracao=date.today().isoformat(),
+        ))
+        session.commit()
+        self._cache_itens = None
+
+    def EditItem(self, registro, Id, Ca, TipoEpi, Dono, Usos,
+                 DataDev, DataDesc) -> None:
+        item = session.query(Itens).filter_by(id=Id).first()
+        if not item:
+            return
+        nome = self._nome_conta(registro)
+        anterior = {
+            "Ca": item.Ca, "TipoEpi": item.TipoEpi, "Dono": item.Dono,
+            "Usos": item.Usos, "DataDevolucao": item.DataDevolucao,
+            "DataDescarte": item.DataDescarte,
+        }
+        novo_estado = {
+            "Ca": Ca, "TipoEpi": TipoEpi, "Dono": Dono,
+            "Usos": Usos, "DataDevolucao": DataDev,
+            "DataDescarte": DataDesc, "QuemAlterou": nome,
+        }
         try:
-            Registro = session.query(Reverter).filter_by(id=Id).first()
-            if not Registro:
+            item.Ca = Ca; item.TipoEpi = TipoEpi; item.Dono = Dono
+            item.Usos = Usos; item.DataDevolucao = DataDev; item.DataDescarte = DataDesc
+            self.GerarCodUnico(item)
+
+            inv_id = self._inv().id
+            session.add(Reverter(
+                InventarioId=inv_id, IdItemAlterado=Id,
+                TiposAlteracao="edicao", VersaoAnterior=anterior,
+                VersaoAtual=novo_estado, QuemAlterou=nome, revertido=False,
+            ))
+            session.add(Historico(
+                InventarioId=inv_id, IdItemAlterado=Id,
+                TiposAlteracao="edicao", VersaoAnterior=anterior,
+                VersaoAtual=novo_estado, QuemAlterou=nome,
+                DataAlteracao=date.today().isoformat(),
+            ))
+            session.commit()
+            self._cache_itens = None
+        except Exception as e:
+            session.rollback()
+            print(f"Erro ao editar: {e}")
+
+    def descartarItem(self, id, state, registro) -> str:
+        item = session.query(Itens).filter_by(id=id).first()
+        if not item:
+            return "item não encontrado"
+        nome = self._nome_conta(registro)
+        anterior = {"Descartado": item.Descartado}
+        novo_estado = {"Descartado": state}
+
+        item.Descartado = state
+        if state:
+            item.DataDevolvido = date.today().isoformat()
+
+        inv_id = self._inv().id
+        session.add(Historico(
+            InventarioId=inv_id, IdItemAlterado=id,
+            TiposAlteracao="descarte", VersaoAnterior=anterior,
+            VersaoAtual=novo_estado, QuemAlterou=nome,
+            DataAlteracao=date.today().isoformat(),
+        ))
+        session.commit()
+        self._cache_itens = None
+        return "item descartado" if state else "descarte desfeito"
+
+    def ReverterItem(self, Id, State, registro) -> str:
+        try:
+            reg = session.query(Reverter).filter_by(id=Id).first()
+            if not reg:
                 return "registro não encontrado"
-            conta = session.query(Contas).filter_by(id=registro).first()
-            nome_criador = conta.Conta if conta else str(registro)
-
-            Registro.revertido = State
-        
-            if State:  #restaura o item
-                Item = session.query(Itens).filter_by(id=Registro.IdItemAlterado).first()
-                if Item and Registro.VersaoAnterior:
-                    Anterior = Registro.VersaoAnterior  # é um dict JSON
-                    Item.Ca = Anterior.get("Ca", Item.Ca)
-                    Item.TipoEpi = Anterior.get("TipoEpi", Item.TipoEpi)
-                    Item.Dono = Anterior.get("Dono", Item.Dono)
-                    Item.Usos = Anterior.get("Usos", Item.Usos)
-                    Item.DataDevolucao = Anterior.get("DataDevolucao", Item.DataDevolucao)
-                    Item.DataDescarte = Anterior.get("DataDescarte", Item.DataDescarte)
-            else:  #restaura para o estado novo
-                Item = session.query(Itens).filter_by(id=Registro.IdItemAlterado).first()
-                if Item and Registro.VersaoAtual:
-                    Atual = Registro.VersaoAtual
-                    Item.Ca = Atual.get("Ca", Item.Ca)
-                    Item.TipoEpi = Atual.get("TipoEpi", Item.TipoEpi)
-                    Item.Dono = Atual.get("Dono", Item.Dono)
-                    Item.Usos = Atual.get("Usos", Item.Usos)
-                    Item.DataDevolucao = Atual.get("DataDevolucao", Item.DataDevolucao)
-                    Item.DataDescarte = Atual.get("DataDescarte", Item.DataDescarte)
-
-            Registro.revertido = True
+            nome = self._nome_conta(registro)
+            item = session.query(Itens).filter_by(id=reg.IdItemAlterado).first()
+            if item:
+                fonte = reg.VersaoAnterior if State else reg.VersaoAtual
+                item.Ca            = fonte.get("Ca",            item.Ca)
+                item.TipoEpi       = fonte.get("TipoEpi",       item.TipoEpi)
+                item.Dono          = fonte.get("Dono",          item.Dono)
+                item.Usos          = fonte.get("Usos",          item.Usos)
+                item.DataDevolucao = fonte.get("DataDevolucao", item.DataDevolucao)
+                item.DataDescarte  = fonte.get("DataDescarte",  item.DataDescarte)
+                # restaurar visibilidade se for reversão de remoção
+                if reg.TiposAlteracao == "remocao" and State:
+                    item.Visivel    = True
+                    item.DataDeletar = None
+            reg.revertido = True
+            session.add(Historico(
+                InventarioId=self._inv().id, IdItemAlterado=reg.IdItemAlterado,
+                TiposAlteracao="reversao",
+                VersaoAnterior=reg.VersaoAtual,
+                VersaoAtual=reg.VersaoAnterior,
+                QuemAlterou=nome,
+                DataAlteracao=date.today().isoformat(),
+            ))
             session.commit()
             self._cache_itens = None
             return "item revertido"
-        except Exception as E:
+        except Exception as e:
             session.rollback()
-            return "erro ao reverter"
-    
-    def ItensReverter(self):
-        return session.query(Reverter).all()
-    
-    def ItensHistorico(self):
-        return session.query(Historico).all()
+            return f"erro ao reverter: {e}"
+
+    # ── dados para o dashboard ────────────────────────────────────────────────
+
+    def DadosDashboard(self) -> dict:
+        """
+        Agrega tudo que o Dashboard precisa em um único dict,
+        evitando múltiplas queries avulsas na camada de UI.
+
+        Retorna:
+            total_ativos      – itens visíveis e não descartados
+            total_descartados – itens descartados (visíveis)
+            por_tipo          – {tipo_epi: quantidade} itens ativos
+            por_dono          – {dono: quantidade} itens ativos
+            atrasos           – [(item, 'atrasado'|'proximo', dias)]
+            entregas_mes      – itens descartados no mês corrente
+            historico_30dias  – alterações dos últimos 30 dias por tipo
+        """
+        hoje = date.today()
+        inicio_mes  = hoje.replace(day=1)
+        inicio_30d  = hoje - timedelta(days=30)
+
+        # contagens base
+        q_ativos = (
+            session.query(Itens)
+            .filter_by(Visivel=True, Descartado=False)
+        )
+        total_ativos = q_ativos.count()
+        total_descartados = (
+            session.query(Itens)
+            .filter_by(Visivel=True, Descartado=True)
+            .count()
+        )
+
+        # distribuição por tipo e por dono
+        por_tipo = {}
+        por_dono = {}
+        for item in q_ativos.all():
+            por_tipo[item.TipoEpi or "N/A"] = por_tipo.get(item.TipoEpi or "N/A", 0) + 1
+            por_dono[item.Dono    or "N/A"] = por_dono.get(item.Dono    or "N/A", 0) + 1
+
+        # alertas de devolução
+        atrasos = GerenciadorTemporal().ConferirValDev()
+
+        # entregas/descartes no mês atual
+        entregas_mes = (
+            session.query(Itens)
+            .filter(
+                Itens.Visivel == True,
+                Itens.Descartado == True,
+                Itens.DataDevolvido >= inicio_mes.isoformat(),
+            )
+            .count()
+        )
+
+        # histórico de alterações nos últimos 30 dias (por tipo de ação)
+        historico_30dias = {}
+        registros = (
+            session.query(Historico)
+            .filter(Historico.DataAlteracao >= inicio_30d.isoformat())
+            .all()
+        )
+        for r in registros:
+            historico_30dias[r.TiposAlteracao] = (
+                historico_30dias.get(r.TiposAlteracao, 0) + 1
+            )
+
+        return {
+            "total_ativos":      total_ativos,
+            "total_descartados": total_descartados,
+            "por_tipo":          por_tipo,
+            "por_dono":          por_dono,
+            "atrasos":           atrasos,
+            "entregas_mes":      entregas_mes,
+            "historico_30dias":  historico_30dias,
+        }
+
+    def DadosDashPessoal(self, dono: str) -> dict:
+        """Dados filtrados para o dashboard individual de um funcionário."""
+        hoje = date.today()
+        itens = (
+            session.query(Itens)
+            .filter_by(Visivel=True, Dono=dono)
+            .all()
+        )
+        ativos     = [i for i in itens if not i.Descartado]
+        descartados = [i for i in itens if i.Descartado]
+        atrasos    = []
+        em_dia     = []
+        for item in ativos:
+            try:
+                dev = date.fromisoformat(item.DataDevolucao)
+                dias = (dev - hoje).days
+                if dias < 0:
+                    atrasos.append((item, abs(dias)))
+                else:
+                    em_dia.append((item, dias))
+            except (ValueError, TypeError):
+                pass
+        return {
+            "dono":       dono,
+            "ativos":     ativos,
+            "descartados": descartados,
+            "atrasos":    atrasos,
+            "em_dia":     em_dia,
+        }
+
 
 # criar sessão ANTES de usar
 Session = sessionmaker(bind=engine)
@@ -408,48 +538,75 @@ session = Session()
 #endregion funcionalidades
 
 #region fake_data
-#temporario até a aplicação ser finalizada
 def fake_data():
     try:
         inv = Inventario()
         session.add(inv)
+        session.flush()
 
-        for i in range(3):
-            novo_item = Itens(
-                Ca=f"ca {i}",
-                CodUnico=f"cod {i}",
-                TipoEpi = f"capacete tipo {i} v2",
-                Dono=f"fulano {i*20}",
-                Usos=[f"uso {i+1}", f"uso {i+3}"],
-                DataDescarte="10/10/2026",
-                DataDevolucao = "09/10/2026",
-                Descartado=False,
-                Inventario=inv
+        nomes = ["Carlos Silva", "Ana Souza", "Pedro Lima", "Maria Costa"]
+        tipos = ["Capacete", "Luva", "Óculos", "Cinto", "Colete"]
+        for i in range(8):
+            dono = nomes[i % len(nomes)]
+            tipo = tipos[i % len(tipos)]
+            desc_date = (date.today() + timedelta(days=180 + i * 15)).isoformat()
+            dev_date  = (date.today() + timedelta(days=30  + i * 5 - 20)).isoformat()
+            novo = Itens(
+                Ca=f"CA-{1000+i}",
+                TipoEpi=tipo,
+                Dono=dono,
+                Usos=[f"uso {j}" for j in range(1, 3)],
+                DataRegistro=date.today().isoformat(),
+                DataDescarte=desc_date,
+                DataDevolucao=dev_date,
+                Visivel=True,
+                CriadoPor="admin",
+                Descartado=(i % 3 == 0),
+                DataDevolvido=date.today().isoformat() if i % 3 == 0 else None,
+                Inventario=inv,
             )
-            session.add(novo_item)
-        session.commit()
+            session.add(novo)
+            session.flush()
+            inv_func = InventarioFuncionalidade()
+            inv_func.GerarCodUnico(novo)
+
         conta = Contas(
-            Conta = "Lucas G",
-            Senha = "123467",
-            cargo = "adm supremo"
+            Conta="admin",
+            Senha=Brycpt.hashpw(b"123456", Brycpt.gensalt()).decode(),
+            cargo="adm",
+            Inventario=inv,
         )
         session.add(conta)
-        session.commit()
 
+        for i in range(5):
+            session.add(Historico(
+                InventarioId=inv.id,
+                IdItemAlterado=i + 1,
+                TiposAlteracao=["adicao","edicao","descarte","remocao","reversao"][i],
+                VersaoAnterior={}, VersaoAtual={},
+                QuemAlterou="admin",
+                DataAlteracao=(date.today() - timedelta(days=i*4)).isoformat(),
+            ))
+
+        session.commit()
+        print("Dados de teste criados com sucesso.")
     except Exception as e:
         session.rollback()
-        print(f'Erro ao criar dados de debug: {e}')
+        print(f"Erro ao criar dados de debug: {e}")
 #endregion
 
 #region rodar
-Base.metadata.create_all(engine)  
+Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
+
 if __name__ == '__main__':
-    #auto atualizar o db
     if os.path.exists('GuindastesRibasDB.db'):
         os.remove('GuindastesRibasDB.db')
-    fake_data()
     Base.metadata.create_all(engine)
-    GerenciadorTemporal()
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    fake_data()
+    gt = GerenciadorTemporal()
+    alertas = gt.ConferirValDev()
 #endregion rodar
