@@ -274,7 +274,6 @@ class DashBoardUi(QWidget):
     def __init__(self,ControleFuncionarios, Historico, Reverter, Gerenciar, Inventario,
                  inv_func: InventarioFuncionalidade = None):
         super().__init__()
-        self.setStyleSheet(f"background:{CORES['bg']}; color:{CORES['texto']};")
         self._inv_func = InventarioFuncionalidade()
         self._dashboard = Dashboard(self._inv_func)
         self._painel_atual = None
@@ -285,29 +284,30 @@ class DashBoardUi(QWidget):
         TopoLayout.setSpacing(6)
 
         TopoLayout = QHBoxLayout()
-        AddItem = QPushButton("Adicionar do inventario")
+        BtnInventario = QPushButton("Inventario")
+        BtnInventario.clicked.connect(Inventario)
+        AddItem = QPushButton("Adicionar")
         AddItem.clicked.connect(lambda: Gerenciar("add"))
-        RemItem = QPushButton("Remover do inventario")
+        RemItem = QPushButton("Remover")
         RemItem.clicked.connect(lambda: Gerenciar("rem"))
-        EditItem = QPushButton("Editar o inventario")
+        EditItem = QPushButton("Editar")
         EditItem.clicked.connect(lambda: Gerenciar("edit"))
         ReverterBotao = QPushButton("Reverter")
         ReverterBotao.clicked.connect(Reverter)
         BtnHistorico = QPushButton("Historico")
         BtnHistorico.clicked.connect(Historico)
-        BtnDashboard = QPushButton("Dashboards")
-        BtnDashboard.clicked.connect(Dashboard)
         BtnControleFuncionarios = QPushButton("ControleFuncionarios")
         BtnControleFuncionarios.clicked.connect(ControleFuncionarios)
 
 
         DashBoardTopoLayout = QHBoxLayout(FundoTopo)
         #DashBoardTopoLayout.setAlignment(Qt.AlignTopoLayout.addWidget(AddItem))
+        TopoLayout.addWidget(BtnInventario)
+        TopoLayout.addWidget(AddItem)
         TopoLayout.addWidget(RemItem)
         TopoLayout.addWidget(EditItem)
         TopoLayout.addWidget(ReverterBotao)
         TopoLayout.addWidget(BtnHistorico)
-        TopoLayout.addWidget(BtnDashboard)
         TopoLayout.addWidget(BtnControleFuncionarios)
         TopoLayout.addStretch()
 
@@ -317,17 +317,6 @@ class DashBoardUi(QWidget):
 
         # seletor de funcionário
         self._combo_pessoal = QComboBox()
-        self._combo_pessoal.setStyleSheet(f"""
-            QComboBox {{
-                background:{CORES['surface']}; color:{CORES['texto']};
-                border:1px solid {CORES['borda']}; border-radius:6px;
-                padding:4px 8px; font-size:12px; min-width:140px;
-            }}
-            QComboBox QAbstractItemView {{
-                background:{CORES['surface']}; color:{CORES['texto']};
-                selection-background-color:{CORES['primaria']};
-            }}
-        """)
         self._combo_pessoal.addItem("Nenhum funcionario selecionado")
         self._carregar_donos()
         self._combo_pessoal.currentTextChanged.connect(self._on_pessoal)

@@ -11,28 +11,24 @@ from pathlib import Path
 if getattr(sys, 'frozen', False):
     root = Path(sys._MEIPASS)
 else:
-    root = Path(__file__).parent.parent   # app/ui → app → raiz
+    root = Path(__file__).parent.parent
 
 sys.path.insert(0, str(root))
-from data.Inventario import InventarioFuncionalidade
+from data.Inventario import InventarioFuncionalidade, ControleFuncionario
 #endregion base projeto
+
+
 def _pasta_assinaturas() -> Path:
-    #Retorna o caminho correto para a pasta 'assinaturas',
     if getattr(sys, 'frozen', False):
-        # diretório onde o .exe está — gravável
         base = Path(sys.executable).parent
     else:
-        base = Path(__file__).parent.parent  # raiz do projeto
-
+        base = Path(__file__).parent.parent
     pasta = base / "assinaturas"
     pasta.mkdir(exist_ok=True)
     return pasta
 
-# Widget de assinatura
 
 class AssinaturaWidget(QWidget):
-    """Área de desenho livre para coleta de assinatura."""
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedSize(800, 150)
@@ -41,8 +37,6 @@ class AssinaturaWidget(QWidget):
         self.UltimoPonto = QPoint()
         self.Desenhando = False
         self.setStyleSheet("border: 2px solid #005B8C; background-color: #ffffff;")
-
-    #eventos de mouse
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -68,13 +62,11 @@ class AssinaturaWidget(QWidget):
     def paintEvent(self, event):
         QPainter(self).drawPixmap(0, 0, self.Canvas)
 
-
     def limpar(self) -> None:
         self.Canvas.fill(QColor("#ffffff"))
         self.update()
 
     def vazio(self) -> bool:
-        #Retorna True se nenhum pixel escuro foi desenhado.
         img = self.Canvas.toImage()
         for y in range(img.height()):
             for x in range(img.width()):
@@ -84,14 +76,12 @@ class AssinaturaWidget(QWidget):
 
     def pixmap(self) -> QPixmap:
         return self.Canvas.copy()
-    
+
     def SalvarAssinatura(self, nome_func: str, data: str, caminho: str = "") -> bool:
-        #Salva a assinatura como PNG. Retorna True se salvou com sucesso.
         if not caminho:
             caminho = f"{nome_func}_{data}_assinatura.png"
         return self.Canvas.save(caminho, "PNG")
 
-# Gerenciador de inventário (add / rem / edit)
 
 TIPOSEPI = [
     "capacete", "luva", "cinto", "bota",
@@ -101,32 +91,27 @@ TIPOSEPI = [
 
 
 class GerenciadorInventario(QWidget):
-    def __init__(self, Historico, Inventario,Dashboard, Reverter,ControleFuncionarios, Usuario=None):
-        """
-        Usuario — callable() → int | None: retorna o id do usuário logado
-                   (substitui o global UserLogado)
-        """
+    def __init__(self, Historico, Inventario, Dashboard, Reverter,
+                 ControleFuncionarios, Usuario=None):
         super().__init__()
         self.IrInventario = Inventario
         self.IrReverter   = Reverter
         self.GetUser      = Usuario
 
-        # botões de navegação (topo fixo)
-        self.BtnInventario = QPushButton("Inventário")
-        self.BtnAdd        = QPushButton("Adicionar")
-        self.BtnRem        = QPushButton("Remover")
-        self.BtnEdit       = QPushButton("Editar")
-        self.BtnReverter   = QPushButton("Reverter")
-        self.BtnHistorico  = QPushButton("Histórico")
-        self.BtnDashboard = QPushButton("Dashboards")
-        self.BtnDashboard.clicked.connect(Dashboard)
+        self.BtnInventario           = QPushButton("Inventário")
+        self.BtnAdd                  = QPushButton("Adicionar")
+        self.BtnRem                  = QPushButton("Remover")
+        self.BtnEdit                 = QPushButton("Editar")
+        self.BtnReverter             = QPushButton("Reverter")
+        self.BtnHistorico            = QPushButton("Histórico")
+        self.BtnDashboard            = QPushButton("Dashboards")
         self.BtnControleFuncionarios = QPushButton("ControleFuncionarios")
-        self.BtnControleFuncionarios.clicked.connect(ControleFuncionarios)
-        
 
         self.BtnInventario.clicked.connect(self.IrInventario)
         self.BtnReverter.clicked.connect(self.IrReverter)
         self.BtnHistorico.clicked.connect(Historico)
+        self.BtnDashboard.clicked.connect(Dashboard)
+        self.BtnControleFuncionarios.clicked.connect(ControleFuncionarios)
         self.BtnAdd.clicked.connect(lambda: self.AtualizarTipo("add"))
         self.BtnRem.clicked.connect(lambda: self.AtualizarTipo("rem"))
         self.BtnEdit.clicked.connect(lambda: self.AtualizarTipo("edit"))
@@ -135,11 +120,10 @@ class GerenciadorInventario(QWidget):
         for Btn in (
             self.BtnInventario, self.BtnAdd, self.BtnRem,
             self.BtnEdit, self.BtnReverter, self.BtnHistorico,
-            self.BtnDashboard,self.BtnControleFuncionarios
+            self.BtnDashboard, self.BtnControleFuncionarios,
         ):
             topo.addWidget(Btn)
 
-        #área de conteúdo dinâmico
         self.Conteudo = QWidget()
         self.ConteudoLayout = QHBoxLayout(self.Conteudo)
 
@@ -147,9 +131,7 @@ class GerenciadorInventario(QWidget):
         base.addLayout(topo)
         base.addWidget(self.Conteudo)
         self.setLayout(base)
-
-    #helpers internos
-
+        
     def LimparConteudo(self) -> None:
         while self.ConteudoLayout.count():
             Item = self.ConteudoLayout.takeAt(0)
@@ -171,17 +153,20 @@ class GerenciadorInventario(QWidget):
 
     @staticmethod
     def ConstruirComboItens(combo: QComboBox) -> list[int]:
-        """
-        Popula o QComboBox com os funcionários disponíveis.
-        Retorna lista paralela de IDs na mesma ordem dos itens do combo,
-        evitando parse de string para recuperar o ID.
-        """
+        #Popula combo com itens do inventário (para rem/edit). Retorna IDs."""
         registros = InventarioFuncionalidade().RemListaFuncionarios()
         ids: list[int] = []
         for ItemId, nome in registros:
             combo.addItem(f"ID: {ItemId}  —  {nome}", userData=ItemId)
             ids.append(ItemId)
         return ids
+
+    @staticmethod
+    def ConstruirListaFUncionarios(combo: QComboBox) -> None:
+        #Popula combo com nomes dos Funcionarios cadastrados."""
+        combo.clear()
+        for func in ControleFuncionario().ListarFuncionarios():
+            combo.addItem(func.Nome, userData=func.id)
 
     #tela: Adicionar
 
@@ -192,28 +177,30 @@ class GerenciadorInventario(QWidget):
         form = QFormLayout(FormWidget)
         form.setSpacing(10)
 
-        self.InputCa        = QLineEdit()
-        self.InputTipo      = QComboBox()
+        self.InputCa   = QLineEdit()
+        self.InputTipo = QComboBox()
         self.InputTipo.addItems(TIPOSEPI)
-        self.InputDono      = QLineEdit()
+
+        self.InputDono = QComboBox()
+        self.ConstruirListaFUncionarios(self.InputDono)
+
         self.InputUsos      = QLineEdit()
         self.InputDevolucao = QDateEdit(calendarPopup=True)
         self.InputDevolucao.setDate(QDate.currentDate())
         self.InputDescarte  = QDateEdit(calendarPopup=True)
         self.InputDescarte.setDate(QDate.currentDate())
 
-        form.addRow("CA:",              self.InputCa)
-        form.addRow("Tipo de EPI:",     self.InputTipo)
-        form.addRow("Responsável:",     self.InputDono)
-        form.addRow("Usos:",            self.InputUsos)
-        form.addRow("Data devolução:",  self.InputDevolucao)
-        form.addRow("Data descarte:",   self.InputDescarte)
+        form.addRow("CA:",             self.InputCa)
+        form.addRow("Tipo de EPI:",    self.InputTipo)
+        form.addRow("Responsável:",    self.InputDono)
+        form.addRow("Usos:",           self.InputUsos)
+        form.addRow("Data devolução:", self.InputDevolucao)
+        form.addRow("Data descarte:",  self.InputDescarte)
 
-        # assinatura
         assinaturaLay = QVBoxLayout()
         LblAss = QLabel("Assinatura do Funcionário:")
         LblAss.setStyleSheet("color: #ffffff; border: none;")
-        self.AreaAssinatura = AssinaturaWidget()#deixar tamanho responsivo
+        self.AreaAssinatura = AssinaturaWidget()
         BtnLimparAss = QPushButton("Limpar assinatura")
         BtnLimparAss.clicked.connect(self.AreaAssinatura.limpar)
         assinaturaLay.addWidget(LblAss)
@@ -228,18 +215,17 @@ class GerenciadorInventario(QWidget):
         self.ConteudoLayout.addWidget(FormWidget)
 
     def ConfirmarAdd(self) -> None:
-        if not self.InputCa.text().strip() or not self.InputDono.text().strip():
+        if not self.InputCa.text().strip() or self.InputDono.count() == 0:
             return
         ca   = self.InputCa.text().strip()
-        dono = self.InputDono.text().strip()
+        dono = self.InputDono.currentText()
         data = str(QDate.currentDate().toPython())
-
 
         InventarioFuncionalidade().AddItem(
             registro=self.User(),
             ca=ca,
-            Registrodata=str(QDate.currentDate().toPython()),
-            tipo_epi=self.InputTipo.currentText(),              # ← era tipoEpi
+            Registrodata=data,
+            tipo_epi=self.InputTipo.currentText(),
             dono=dono,
             usos=[u.strip() for u in self.InputUsos.text().split(",") if u.strip()],
             data_descarte=str(self.InputDescarte.date().toPython()),
@@ -247,16 +233,15 @@ class GerenciadorInventario(QWidget):
         )
         if not self.AreaAssinatura.vazio():
             pasta = _pasta_assinaturas()
-
             self.AreaAssinatura.SalvarAssinatura(
                 nome_func=dono,
                 data=data,
-                caminho=f"data/assinaturas/{dono}_{data}.png",
+                caminho=str(pasta / f"{dono}_{data}.png"),
             )
-
         self.IrInventario()
 
     #tela: Remover
+
     def Rem(self) -> None:
         self.LimparConteudo()
 
@@ -272,7 +257,7 @@ class GerenciadorInventario(QWidget):
     def ConfirmarRem(self) -> None:
         if self.ComboRem.count() == 0:
             return
-        ItemId = self.ComboRem.currentData()  # userData=ItemId definido em ConstruirComboItens
+        ItemId = self.ComboRem.currentData()
         InventarioFuncionalidade().RemItem(ItemId, self.User())
         self.IrInventario()
 
@@ -283,7 +268,6 @@ class GerenciadorInventario(QWidget):
 
         container = QVBoxLayout()
 
-        # seleção do funcionário
         SelecaoWidget = QWidget()
         SelecaoForm   = QFormLayout(SelecaoWidget)
 
@@ -292,20 +276,22 @@ class GerenciadorInventario(QWidget):
 
         BtnSelecionar = QPushButton("Selecionar")
         BtnSelecionar.clicked.connect(self.selecionarEdicao)
-        SelecaoForm.addRow("Funcionário:", self.ComboEdit)
+        SelecaoForm.addRow("Item:", self.ComboEdit)
         SelecaoForm.addRow(BtnSelecionar)
         container.addWidget(SelecaoWidget)
 
-        # formulário de edição (oculto até selecionar)
         self.FormEditWidget = QWidget()
         self.FormEditWidget.hide()
         formEdit = QFormLayout(self.FormEditWidget)
         formEdit.setSpacing(10)
 
-        self.EditCa        = QLineEdit()
-        self.EditTipo      = QComboBox()
+        self.EditCa   = QLineEdit()
+        self.EditTipo = QComboBox()
         self.EditTipo.addItems(TIPOSEPI)
-        self.EditDono      = QLineEdit()
+
+        self.EditDono = QComboBox()
+        self.ConstruirListaFUncionarios(self.EditDono)
+
         self.EditUsos      = QLineEdit()
         self.EditDevolucao = QDateEdit(calendarPopup=True)
         self.EditDevolucao.setDate(QDate.currentDate())
@@ -329,35 +315,34 @@ class GerenciadorInventario(QWidget):
 
     def selecionarEdicao(self) -> None:
         ItemId = self.ComboEdit.currentData()
-        Item    = InventarioFuncionalidade().SelFuncionario(ItemId)
+        Item   = InventarioFuncionalidade().SelFuncionario(ItemId)
         if not Item:
             return
         self.EditCa.setText(Item.Ca)
         self.EditTipo.setCurrentText(Item.TipoEpi)
-        self.EditDono.setText(Item.Dono)
-        self.EditUsos.setText(Item.usosFormatado)
+        idx = self.EditDono.findText(Item.Dono)
+        if idx >= 0:
+            self.EditDono.setCurrentIndex(idx)
+        self.EditUsos.setText(Item.Usosformatado)
         self.FormEditWidget.show()
 
     def ConfirmarEdicao(self) -> None:
         ItemId = self.ComboEdit.currentData()
         InventarioFuncionalidade().EditItem(
-            self.User(),                                                    # registro
-            ItemId,                                                         # Id
-            self.EditCa.text().strip(),                                     # Ca
-            self.EditTipo.currentText(),                                    # TipoEpi
-            self.EditDono.text().strip(),                                   # Dono
-            [u.strip() for u in self.EditUsos.text().split(",") if u.strip()], # Usos
-            str(self.EditDevolucao.date().toPython()),                      # DataDev
-            str(self.EditDescarte.date().toPython()),                       # DataDesc
+            self.User(),
+            ItemId,
+            self.EditCa.text().strip(),
+            self.EditTipo.currentText(),
+            self.EditDono.currentText(),
+            [u.strip() for u in self.EditUsos.text().split(",") if u.strip()],
+            str(self.EditDevolucao.date().toPython()),
+            str(self.EditDescarte.date().toPython()),
         )
         self.IrInventario()
 
-    #troca de modo
-
     def AtualizarTipo(self, tipo: str) -> None:
-        """Exibe o conteúdo correto e destaca o botão ativo ocultando-o."""
-        MapaBtn  = {"add": self.BtnAdd,  "rem": self.BtnRem,  "edit": self.BtnEdit}
-        mapaAcao = {"add": self.Add,       "rem": self.Rem,       "edit": self.Edit}
+        MapaBtn  = {"add": self.BtnAdd, "rem": self.BtnRem, "edit": self.BtnEdit}
+        mapaAcao = {"add": self.Add,    "rem": self.Rem,    "edit": self.Edit}
 
         for Btn in MapaBtn.values():
             Btn.setVisible(True)

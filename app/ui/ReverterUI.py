@@ -30,9 +30,9 @@ class ReverterUi(QWidget):
         topo = QHBoxLayout()
         for texto, acao in [
             ("Inventário", Inventario),
-            ("Adicionar do inventário", lambda: Gerenciar("add")),
-            ("Remover do inventário", lambda: Gerenciar("rem")),
-            ("Editar o inventário", lambda: Gerenciar("edit")),
+            ("Adicionar", lambda: Gerenciar("add")),
+            ("Remover", lambda: Gerenciar("rem")),
+            ("Editar", lambda: Gerenciar("edit")),
             ("Histórico", Historico),
             ("Dashboard", Dashboard),
             ("ControleFuncionarios", ControleFuncionarios)

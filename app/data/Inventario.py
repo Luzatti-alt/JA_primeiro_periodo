@@ -17,7 +17,6 @@ else:
 DbPath = os.path.join(BASE_DIR, "GuindastesRibasDB.db")
 engine = create_engine(f'sqlite:///{DbPath}')
 
-
 class Contas(Base):
     __tablename__ = 'conta'
     id = Column(Integer, primary_key=True)
@@ -57,18 +56,19 @@ class Contas(Base):
         session.add(conta)
         session.commit()
 
-
 class Funcionarios(Base):
     __tablename__ = 'Funcionarios'
     id = Column(Integer, primary_key=True)
     Nome = Column(String(70))
     Email = Column(String(70))
+    Cargo = Column(String(70))
+    DataAdmissao = Column(String)       # ISO: YYYY-MM-DD
+    Status = Column(String(30), default="Ativo")  # Ativo | Inativo | Férias | Licença
     ListaEpiAtual = Column(JSON)
     ListaDevAtrasadas = Column(JSON)
     QuantidadeDevAtrasadas = Column(Integer)
     ListaDevEmDia = Column(JSON)
     QuantidadeDevEmDia = Column(Integer)
-
 
 class Itens(Base):
     __tablename__ = 'itens'
@@ -95,7 +95,6 @@ class Itens(Base):
             return ", ".join(self.Usos)
         return str(self.Usos) if self.Usos else ""
 
-
 class Reverter(Base):
     __tablename__ = 'Reverter'
     id = Column(Integer, primary_key=True)
@@ -107,7 +106,6 @@ class Reverter(Base):
     VersaoAtual = Column(JSON)
     QuemAlterou = Column(String)
     revertido = Column(Boolean, default=False)
-
 
 class Historico(Base):
     __tablename__ = 'Historico'
@@ -121,7 +119,6 @@ class Historico(Base):
     VersaoAtual = Column(JSON)
     # novo: timestamp automático para facilitar filtros por data no dashboard
     DataAlteracao = Column(String, default=lambda: date.today().isoformat())
-
 
 class Inventario(Base):
     __tablename__ = 'Inventario'
@@ -174,6 +171,85 @@ class GerenciadorTemporal():
             session.commit()
         return removidos
 
+class ControleFuncionario():
+    def __init__(self):
+        pass
+    def TotalFuncionarios(self) -> int:
+        return session.query(Funcionarios).count()
+ 
+    def ListarFuncionarios(self):
+        return session.query(Funcionarios).all()
+ 
+    def FuncionariosPaginados(self, offset=0, limit=30):
+        return (
+            session.query(Funcionarios)
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+ 
+    def Pesquisar(self, texto: str):
+        return session.query(Funcionarios).filter(
+            or_(
+                Funcionarios.Nome.like(f"%{texto}%"),
+                Funcionarios.Cargo.like(f"%{texto}%"),
+                Funcionarios.Email.like(f"%{texto}%"),
+                Funcionarios.Status.like(f"%{texto}%"),
+            )
+        ).all()
+ 
+    def Contratar(self, nome: str, email: str, cargo: str, data_admissao: str) -> None:
+        func = Funcionarios(
+            Nome=nome,
+            Email=email,
+            Cargo=cargo,
+            DataAdmissao=data_admissao,
+            Status="Ativo",
+            ListaEpiAtual=[],
+            ListaDevAtrasadas=[],
+            QuantidadeDevAtrasadas=0,
+            ListaDevEmDia=[],
+            QuantidadeDevEmDia=0,
+        )
+        session.add(func)
+        session.commit()
+ 
+    def Demitir(self, id: int) -> bool:
+        func = session.query(Funcionarios).filter_by(id=id).first()
+        if not func:
+            return False
+        session.delete(func)
+        session.commit()
+        return True
+ 
+    def AlterarStatus(self, id: int, novo_status: str) -> bool:
+        """Ativo | Inativo | Ferias | Licenca"""
+        func = session.query(Funcionarios).filter_by(id=id).first()
+        if not func:
+            return False
+        func.Status = novo_status
+        session.commit()
+        return True
+ 
+    def AtualizarEpiAtual(self, id: int, lista_epi: list) -> None:
+        func = session.query(Funcionarios).filter_by(id=id).first()
+        if func:
+            func.ListaEpiAtual = lista_epi
+            session.commit()
+ 
+    def EntregaEpiEmDia(self, id: int, lista: list) -> None:
+        func = session.query(Funcionarios).filter_by(id=id).first()
+        if func:
+            func.ListaDevEmDia = lista
+            func.QuantidadeDevEmDia = len(lista)
+            session.commit()
+ 
+    def AtrasoEntregaEpi(self, id: int, lista: list) -> None:
+        func = session.query(Funcionarios).filter_by(id=id).first()
+        if func:
+            func.ListaDevAtrasadas = lista
+            func.QuantidadeDevAtrasadas = len(lista)
+            session.commit()
 
 class InventarioFuncionalidade():
     #optimizar query e usabilidade do usuario
@@ -234,9 +310,7 @@ class InventarioFuncionalidade():
 
     def ItensHistorico(self):
         return session.query(Historico).all()
-
-    # ── código único ──────────────────────────────────────────────────────────
-
+    
     def GerarCodUnico(self, item) -> None:
         parte_dono = (item.Dono or "XXX")[:3].upper()
         parte_ca   = (item.Ca   or "0000")[:4]
@@ -244,7 +318,6 @@ class InventarioFuncionalidade():
         devo = (item.DataDevolucao or "0000-00-00").replace("-", "")
         item.CodUnico = f"{parte_dono}{parte_ca}{desc[6:8]}{devo[6:8]}"
 
-    # ── escrita ───────────────────────────────────────────────────────────────
 
     def _nome_conta(self, registro_id: int) -> str:
         conta = session.query(Contas).filter_by(id=registro_id).first()
@@ -425,7 +498,6 @@ class InventarioFuncionalidade():
             session.rollback()
             return f"erro ao reverter: {e}"
 
-    # ── dados para o dashboard ────────────────────────────────────────────────
 
     def DadosDashboard(self) -> dict:
         """
@@ -586,6 +658,24 @@ def fake_data():
                 VersaoAnterior={}, VersaoAtual={},
                 QuemAlterou="admin",
                 DataAlteracao=(date.today() - timedelta(days=i*4)).isoformat(),
+            ))
+        cargos  = ["Operador", "Supervisor", "Técnico", "Analista", "Almoxarife"]
+        status  = ["Ativo", "Ativo", "Férias", "Ativo", "Inativo"]
+        nomes_func = ["João Silva", "Maria Costa", "Rafael Pinto", "Ana Lima", "Carlos Melo"]
+
+        for i, nome in enumerate(nomes_func):
+            adm = (date.today() - timedelta(days=365 * (i + 1))).isoformat()
+            session.add(Funcionarios(
+                Nome=nome,
+                Email=f"{nome.split()[0].lower()}@empresa.com",
+                Cargo=cargos[i],
+                DataAdmissao=adm,
+                Status=status[i],
+                ListaEpiAtual=[],
+                ListaDevAtrasadas=[],
+                QuantidadeDevAtrasadas=0,
+                ListaDevEmDia=[],
+                QuantidadeDevEmDia=0,
             ))
 
         session.commit()

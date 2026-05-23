@@ -37,12 +37,12 @@ class Login(QWidget):
 
         # Logo
         logoRow = QHBoxLayout()
-        self.BtnLogo = QPushButton("IMG")
+        self.BtnLogo = QPushButton("IMG")#criar logo para isso e trocar para img real
         self.BtnLogo.setFont(font)
         self.BtnLogo.setFlat(True)
         self.BtnLogo.setStyleSheet("border: none; background: transparent;")
         self.BtnLogo.clicked.connect(lambda: self.RegistrarClick("img"))
-        self.BtnNome = QPushButton("Sistema PLACEHOARDER")
+        self.BtnNome = QPushButton("Sistema Controle Epi Inteligente")
         self.BtnNome.setFont(font)
         self.BtnNome.setFlat(True)
         self.BtnNome.setStyleSheet("border: none; background: transparent;")
@@ -148,6 +148,7 @@ class CriarConta(QWidget):
             self.IrLogin()
         else:
             self.LblErro.setText("Usuário já existe ou cargo inválido.")
+            self.IrLogin()
 
 
 class ExcluirContaUI(QWidget):

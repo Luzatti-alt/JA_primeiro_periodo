@@ -35,11 +35,11 @@ class InventarioUi(QWidget):
 
         #topo ui
         TopoLayout = QHBoxLayout()
-        AddItem = QPushButton("Adicionar do inventario")
+        AddItem = QPushButton("Adicionar")
         AddItem.clicked.connect(lambda: Gerenciar("add"))
-        RemItem = QPushButton("Remover do inventario")
+        RemItem = QPushButton("Remover")
         RemItem.clicked.connect(lambda: Gerenciar("rem"))
-        EditItem = QPushButton("Editar o inventario")
+        EditItem = QPushButton("Editar")
         EditItem.clicked.connect(lambda: Gerenciar("edit"))
         ReverterBotao = QPushButton("Reverter")
         ReverterBotao.clicked.connect(Reverter)
