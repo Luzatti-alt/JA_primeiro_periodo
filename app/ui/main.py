@@ -18,7 +18,8 @@ from ui.InventarioUI import InventarioUi
 from ui.ReverterUI import ReverterUi
 from ui.HistoricoUI import HistoricoUi
 from ui.ControleInventarioUI import GerenciadorInventario
-from ui.GerenciarFuncionarioUi import ControleFuncionariosUI
+from ui.GerenciarFuncionarioUi import GerenciarFuncionariosUI
+from ui.ControleFunc import ControleFuncionariosUI
 from ui.DashBoardUI import Dashboard,DashBoardUi
 
 def resource_path(relative_path: str) -> str:
@@ -105,7 +106,7 @@ class GerenciadorJanelas(QWidget):
             Historico=self.IrHistorico,
             Reverter=self.IrReverter,
             Gerenciar=self.IrGerenciar,
-            ControleFuncionarios = self.IrControleFuncionarios,
+            GerenciarFuncionarios = self.IrGerenciarFuncionarios,
             Usuario=self.GetUser,
             Dashboard= self.IrDashboard
         )
@@ -115,21 +116,21 @@ class GerenciadorJanelas(QWidget):
             Inventario=self.IrInventario,
             Gerenciar=self.IrGerenciar,
             Dashboard= self.IrDashboard,
-            ControleFuncionarios = self.IrControleFuncionarios,
+            GerenciarFuncionarios = self.IrGerenciarFuncionarios,
             Usuario=self.GetUser,        # callback para ler user logado
         )
         self.Historico        = HistoricoUi(
             Reverter=self.IrReverter,
             Inventario=self.IrInventario,
             Gerenciar=self.IrGerenciar,
-            ControleFuncionarios = self.IrControleFuncionarios,
+            GerenciarFuncionarios = self.IrGerenciarFuncionarios,
             Dashboard= self.IrDashboard,
         )
         self.Gerenciar = GerenciadorInventario(
             Historico=self.IrHistorico,
             Inventario=self.IrInventario,
             Reverter=self.IrReverter,
-            ControleFuncionarios = self.IrControleFuncionarios,
+            GerenciarFuncionarios = self.IrGerenciarFuncionarios,
             Dashboard= self.IrDashboard,
             Usuario=self.GetUser,
         )
@@ -137,14 +138,24 @@ class GerenciadorJanelas(QWidget):
             Historico=self.IrHistorico,
             Inventario=self.IrInventario,
             Gerenciar=self.IrGerenciar,
-            ControleFuncionarios = self.IrControleFuncionarios,
+            GerenciarFuncionarios = self.IrGerenciarFuncionarios,
             Reverter=self.IrReverter
         )
-        self.ControleFuncionarios = ControleFuncionariosUI(
+        self.GerenciarFuncionarios = GerenciarFuncionariosUI(
             Historico=self.IrHistorico,
             Inventario=self.IrInventario,
             Gerenciar=self.IrGerenciar,
             Dashboard= self.IrDashboard,
+            ControleFuncionarios = self.IrControleFuncionarios,
+            Reverter=self.IrReverter
+        )
+        self.ControleFuncionarios=ControleFuncionariosUI(
+            tipo = None,
+            Historico=self.IrHistorico,
+            Inventario=self.IrInventario,
+            Gerenciar=self.IrGerenciar,
+            Dashboard= self.IrDashboard,
+            GerenciarFuncionarios = self.IrGerenciarFuncionarios,
             Reverter=self.IrReverter
         )
         self.ExcluirConta = ExcluirContaUI()  
@@ -154,7 +165,8 @@ class GerenciadorJanelas(QWidget):
             self.Inventario, self.Reverter,
             self.Historico, self.Gerenciar,
             self.ExcluirConta,self.Dashboard,
-            self.ControleFuncionarios,
+            self.GerenciarFuncionarios,
+            self.ControleFuncionarios
         ):
             self.Stacked.addWidget(tela)
 
@@ -200,7 +212,11 @@ class GerenciadorJanelas(QWidget):
         self.Dashboard.atualizar()
         self.IrPara(self.Dashboard)
 
-    def IrControleFuncionarios(self)-> None:
+    def IrGerenciarFuncionarios(self)-> None:
+        self.IrPara(self.GerenciarFuncionarios)
+
+    def IrControleFuncionarios(self,tipo:str)->None:
+        self.ControleFuncionarios.AtualizarTipo(tipo)
         self.IrPara(self.ControleFuncionarios)
 
     def IrExcluirConta(self) -> None:

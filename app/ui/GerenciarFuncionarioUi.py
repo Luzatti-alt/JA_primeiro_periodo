@@ -19,10 +19,10 @@ def resource_path(relative_path):
 #endregion base projeto
 
 
-class ControleFuncionariosUI(QWidget):
+class GerenciarFuncionariosUI(QWidget):
     PAGESIZE = 30
 
-    def __init__(self, Historico, Reverter, Gerenciar, Dashboard, Inventario):
+    def __init__(self, Historico,ControleFuncionarios, Reverter, Gerenciar, Dashboard, Inventario):
         super().__init__()
 
         self.Offset = 0
@@ -80,10 +80,14 @@ class ControleFuncionariosUI(QWidget):
 
         ControleFuncionarioLayout = QHBoxLayout()
         AddFuncionario = QPushButton("Adicionar Funcionario")
-        ControleFuncionarioLayout.addWidget(AddFuncionario)
+        AddFuncionario.clicked.connect(lambda: ControleFuncionarios(tipo="add"))
         EditFuncionario = QPushButton("Editar Funcionario")
-        ControleFuncionarioLayout.addWidget(EditFuncionario)
+        EditFuncionario.clicked.connect(lambda: ControleFuncionarios(tipo="edit"))
         RemFuncionario = QPushButton("Remover Funcionario")
+        RemFuncionario.clicked.connect(lambda: ControleFuncionarios(tipo="rem"))
+        
+        ControleFuncionarioLayout.addWidget(AddFuncionario)
+        ControleFuncionarioLayout.addWidget(EditFuncionario)
         ControleFuncionarioLayout.addWidget(RemFuncionario)
 
         PesquisaLayout = QHBoxLayout()

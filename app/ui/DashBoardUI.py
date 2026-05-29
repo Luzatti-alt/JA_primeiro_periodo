@@ -271,7 +271,7 @@ class Dashboard(QWidget):
 
 
 class DashBoardUi(QWidget):
-    def __init__(self,ControleFuncionarios, Historico, Reverter, Gerenciar, Inventario,
+    def __init__(self,GerenciarFuncionarios, Historico, Reverter, Gerenciar, Inventario,
                  inv_func: InventarioFuncionalidade = None):
         super().__init__()
         self._inv_func = InventarioFuncionalidade()
@@ -296,8 +296,8 @@ class DashBoardUi(QWidget):
         ReverterBotao.clicked.connect(Reverter)
         BtnHistorico = QPushButton("Historico")
         BtnHistorico.clicked.connect(Historico)
-        BtnControleFuncionarios = QPushButton("ControleFuncionarios")
-        BtnControleFuncionarios.clicked.connect(ControleFuncionarios)
+        BtnGerenciarFuncionarios = QPushButton("GerenciarFuncionarios")
+        BtnGerenciarFuncionarios.clicked.connect(GerenciarFuncionarios)
 
 
         DashBoardTopoLayout = QHBoxLayout(FundoTopo)
@@ -308,7 +308,7 @@ class DashBoardUi(QWidget):
         TopoLayout.addWidget(EditItem)
         TopoLayout.addWidget(ReverterBotao)
         TopoLayout.addWidget(BtnHistorico)
-        TopoLayout.addWidget(BtnControleFuncionarios)
+        TopoLayout.addWidget(BtnGerenciarFuncionarios)
         TopoLayout.addStretch()
 
         # abas de dashboard

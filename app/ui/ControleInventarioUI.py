@@ -92,7 +92,7 @@ TIPOSEPI = [
 
 class GerenciadorInventario(QWidget):
     def __init__(self, Historico, Inventario, Dashboard, Reverter,
-                 ControleFuncionarios, Usuario=None):
+                 GerenciarFuncionarios, Usuario=None):
         super().__init__()
         self.IrInventario = Inventario
         self.IrReverter   = Reverter
@@ -105,13 +105,13 @@ class GerenciadorInventario(QWidget):
         self.BtnReverter             = QPushButton("Reverter")
         self.BtnHistorico            = QPushButton("Histórico")
         self.BtnDashboard            = QPushButton("Dashboards")
-        self.BtnControleFuncionarios = QPushButton("ControleFuncionarios")
+        self.BtnGerenciarFuncionarios = QPushButton("GerenciarFuncionarios")
 
         self.BtnInventario.clicked.connect(self.IrInventario)
         self.BtnReverter.clicked.connect(self.IrReverter)
         self.BtnHistorico.clicked.connect(Historico)
         self.BtnDashboard.clicked.connect(Dashboard)
-        self.BtnControleFuncionarios.clicked.connect(ControleFuncionarios)
+        self.BtnGerenciarFuncionarios.clicked.connect(GerenciarFuncionarios)
         self.BtnAdd.clicked.connect(lambda: self.AtualizarTipo("add"))
         self.BtnRem.clicked.connect(lambda: self.AtualizarTipo("rem"))
         self.BtnEdit.clicked.connect(lambda: self.AtualizarTipo("edit"))
@@ -120,7 +120,7 @@ class GerenciadorInventario(QWidget):
         for Btn in (
             self.BtnInventario, self.BtnAdd, self.BtnRem,
             self.BtnEdit, self.BtnReverter, self.BtnHistorico,
-            self.BtnDashboard, self.BtnControleFuncionarios,
+            self.BtnDashboard, self.BtnGerenciarFuncionarios,
         ):
             topo.addWidget(Btn)
 

@@ -17,7 +17,7 @@ from data.Inventario import session
 #endregion base projeto
 
 class HistoricoUi(QWidget):
-    def __init__(self,Reverter, Inventario, Gerenciar,Dashboard,ControleFuncionarios):
+    def __init__(self,Reverter, Inventario, Gerenciar,Dashboard,GerenciarFuncionarios):
         super().__init__()
         HistoricoBaseLayout = QVBoxLayout()
         VoltarBotao = QPushButton("Inventario")
@@ -32,8 +32,8 @@ class HistoricoUi(QWidget):
         ReverterBotao = QPushButton("Reverter")
         ReverterBotao.clicked.connect(Reverter)
         BtnDashboard = QPushButton("Dashboards")
-        BtnControleFuncionarios = QPushButton("ControleFuncionarios")
-        BtnControleFuncionarios.clicked.connect(ControleFuncionarios)
+        BtnGerenciarFuncionarios = QPushButton("GerenciarFuncionarios")
+        BtnGerenciarFuncionarios.clicked.connect(GerenciarFuncionarios)
         BtnDashboard.clicked.connect(Dashboard)
         TopoLayout.addWidget(VoltarBotao)
         TopoLayout.addWidget(AddItem)
@@ -41,7 +41,7 @@ class HistoricoUi(QWidget):
         TopoLayout.addWidget(EditItem)
         TopoLayout.addWidget(ReverterBotao)
         TopoLayout.addWidget(BtnDashboard)
-        TopoLayout.addWidget(BtnControleFuncionarios)
+        TopoLayout.addWidget(BtnGerenciarFuncionarios)
 
         HisTopoLay = QVBoxLayout()
         FundoTopo = QWidget()

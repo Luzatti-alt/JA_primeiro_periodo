@@ -18,7 +18,7 @@ from data.Inventario import InventarioFuncionalidade
 
 
 class ReverterUi(QWidget):
-    def __init__(self, Historico, Inventario, Gerenciar,ControleFuncionarios,Dashboard, Usuario=None):
+    def __init__(self, Historico, Inventario, Gerenciar,GerenciarFuncionarios,Dashboard, Usuario=None):
         """
         Usuario — callable() → int | None: retorna o id do usuário logado
                    (substitui o global UserLogado)
@@ -34,8 +34,8 @@ class ReverterUi(QWidget):
             ("Remover", lambda: Gerenciar("rem")),
             ("Editar", lambda: Gerenciar("edit")),
             ("Histórico", Historico),
-            ("Dashboard", Dashboard),
-            ("ControleFuncionarios", ControleFuncionarios)
+            ("Dashboards", Dashboard),
+            ("GerenciarFuncionarios", GerenciarFuncionarios)
         ]:
             btn = QPushButton(texto)
             btn.clicked.connect(acao)
