@@ -221,7 +221,10 @@ class ControleFuncionario():
         session.delete(func)
         session.commit()
         return True
- 
+
+    def Editar(self,Nome,Email,):
+        pass
+    
     def AlterarStatus(self, id: int, novo_status: str) -> bool:
         """Ativo | Inativo | Ferias | Licenca"""
         func = session.query(Funcionarios).filter_by(id=id).first()
@@ -572,8 +575,7 @@ class InventarioFuncionalidade():
             "historico_30dias":  historico_30dias,
         }
 
-    def DadosDashPessoal(self, dono: str) -> dict:
-        """Dados filtrados para o dashboard individual de um funcionário."""
+    def DadosDashPessoal(self, dono: str) -> dict:#Dados filtrados para o dashboard individual de um funcionário
         hoje = date.today()
         itens = (
             session.query(Itens)
@@ -601,7 +603,6 @@ class InventarioFuncionalidade():
             "atrasos":    atrasos,
             "em_dia":     em_dia,
         }
-
 
 # criar sessão ANTES de usar
 Session = sessionmaker(bind=engine)

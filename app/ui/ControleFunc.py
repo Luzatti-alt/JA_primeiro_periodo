@@ -1,7 +1,7 @@
 #region base projeto
-from PySide6.QtCore import Qt,QTimer
+from PySide6.QtCore import Qt,QTimer,QDate
 from PySide6.QtGui import QColor, QPalette, QIcon
-from PySide6.QtWidgets import QApplication, QFormLayout,QComboBox,QLineEdit, QPushButton, QWidget, QVBoxLayout,QHBoxLayout, QStackedWidget
+from PySide6.QtWidgets import QApplication,QDateEdit, QFormLayout,QComboBox,QLineEdit, QPushButton, QWidget, QVBoxLayout,QHBoxLayout, QStackedWidget
 import sys
 from pathlib import Path
 
@@ -11,6 +11,8 @@ else:
     root = Path(__file__).parent.parent
 
 sys.path.insert(0, str(root))
+
+from data.Inventario import ControleFuncionario
 
 class ControleFuncionariosUI(QWidget):
     def __init__(self,tipo, Historico,GerenciarFuncionarios, Reverter, Gerenciar, Dashboard, Inventario):
@@ -66,6 +68,14 @@ class ControleFuncionariosUI(QWidget):
             MapaBtn[tipo].setVisible(False)
             mapaAcao[tipo]()
 
+    @staticmethod
+    def ConstruirListaFUncionarios(combo: QComboBox) -> None:
+        #Popula combo com nomes dos Funcionarios cadastrados."""
+        combo.clear()
+        for func in ControleFuncionario().ListarFuncionarios():
+            combo.addItem(func.Nome, userData=func.id)
+
+
     def LimparConteudo(self) -> None:
         while self.ConteudoLayout.count():
             Item = self.ConteudoLayout.takeAt(0)
@@ -96,12 +106,23 @@ class ControleFuncionariosUI(QWidget):
         InputEmail = QLineEdit()
         InputCargo = QComboBox()
         InputCargo.addItems(cargos)
+        data = QDateEdit(calendarPopup=True)
+        data.setDate(QDate.currentDate())
         form.addRow("Nome",InputNome)
         form.addRow("Email",InputEmail)
         form.addRow("Cargo",InputCargo)
 
         BtnConfirmar = QPushButton("Adicionar Funcionário")
-        BtnConfirmar.clicked.connect(lambda: self.ConfirmarAdd(InputNome, InputEmail, InputCargo))
+        BtnConfirmar.clicked.connect(lambda:(
+            ControleFuncionario().Contratar(
+            nome=InputNome.text(),
+            email=InputEmail.text(),
+            cargo=InputCargo.currentText(),
+            data_admissao=str(data.date().toPython())
+        ),
+        self.IrInventario()
+        )
+        )
         form.addRow(BtnConfirmar)
 
         self.ConteudoLayout.addWidget(FormWidget)
@@ -115,9 +136,13 @@ class ControleFuncionariosUI(QWidget):
         form = QFormLayout(FormWidget)
         form.setSpacing(10)
         #aparecer select da lista de funcionarios+btn de confirmar
+        ListaFuncionarios = QComboBox()
+        self.ConstruirListaFUncionarios(ListaFuncionarios)
+        #Inventario-> ControleFuncionarios().ListarFuncionarios()
+        form.addRow(ListaFuncionarios)
 
         BtnConfirmar = QPushButton("Remover Funcionário")
-        BtnConfirmar.clicked.connect(lambda: self.ConfirmarAdd(InputNome, InputEmail, InputCargo))
+        #BtnConfirmar.clicked.connect(lambda: self.ConfirmarAdd(InputNome, InputEmail, InputCargo))
         form.addRow(BtnConfirmar)
 
         self.ConteudoLayout.addWidget(FormWidget)
@@ -128,9 +153,13 @@ class ControleFuncionariosUI(QWidget):
         FormWidget = QWidget()
         form = QFormLayout(FormWidget)
         form.setSpacing(10)
-        #aparecer select da lista de funcionarios+btn de confirmar
+        ListaFuncionarios = QComboBox()
+        self.ConstruirListaFUncionarios(ListaFuncionarios)
+        #Inventario-> ControleFuncionarios().ListarFuncionarios()
+        form.addRow(ListaFuncionarios)
         BtnConfirmar = QPushButton("Editar Funcionário")
-        BtnConfirmar.clicked.connect(lambda: self.ConfirmarAdd(InputNome, InputEmail, InputCargo))
+        
+        #BtnConfirmar.clicked.connect(lambda: self.ConfirmarAdd(InputNome, InputEmail, InputCargo))
         form.addRow(BtnConfirmar)
 
         self.ConteudoLayout.addWidget(FormWidget)
