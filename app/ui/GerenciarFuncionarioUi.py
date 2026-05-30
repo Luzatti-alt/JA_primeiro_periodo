@@ -105,7 +105,6 @@ class GerenciarFuncionariosUI(QWidget):
         self.ScrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.ScrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.ScrollArea.setWidgetResizable(True)
-        self.ScrollArea.setFixedHeight(5 * 80)
 
         self.ListaLayout = QVBoxLayout(self.ScrollContent)
         self.ListaLayout.setSpacing(4)
@@ -165,7 +164,6 @@ class GerenciarFuncionariosUI(QWidget):
         )
         for func in novos:
             linha = self.CriarLinhaFuncionario(func)
-            linha.setFixedHeight(60)
             self.ListaLayout.addWidget(linha)
 
         self.Offset += len(novos)
@@ -194,7 +192,6 @@ class GerenciarFuncionariosUI(QWidget):
 
         for func in resultados:
             linha = self.CriarLinhaFuncionario(func)
-            linha.setFixedHeight(60)
             self.ListaLayout.addWidget(linha)
 
         self.ListaLayout.addStretch()

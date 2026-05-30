@@ -222,8 +222,18 @@ class ControleFuncionario():
         session.commit()
         return True
 
-    def Editar(self,Nome,Email,):
-        pass
+    def Editar(self, id: int, nome: str, email: str,cargo: str, status: str) -> bool:
+        func = session.query(Funcionarios).filter_by(id=id).first()
+        if not func:
+            return False
+        func.Nome   = nome
+        func.Email  = email
+        func.Cargo  = cargo
+        func.Status = status
+        session.commit()
+        return True
+    def BuscarId(self, id: int):
+        return session.query(Funcionarios).filter_by(id=id).first()
     
     def AlterarStatus(self, id: int, novo_status: str) -> bool:
         """Ativo | Inativo | Ferias | Licenca"""

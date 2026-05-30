@@ -107,7 +107,6 @@ class InventarioUi(QWidget):
         self.ScrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.ScrollArea.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.ScrollArea.setWidgetResizable(True)
-        self.ScrollArea.setFixedHeight(5 * 80)  # ~ 5 linhas
         self.ListaItensLayout = QVBoxLayout(self.ScrollContent)
         self.ListaItensLayout.setSpacing(10)
         self.ListaItensLayout.setContentsMargins(0, 0, 0, 0)
@@ -184,7 +183,6 @@ class InventarioUi(QWidget):
         )
         for Item in Novos:
             Linha = self.CriarLinhaItem(Item)
-            Linha.setFixedHeight(78)
             self.ListaItensLayout.addWidget(Linha)
 
         self.Offset += len(Novos)
@@ -219,7 +217,6 @@ class InventarioUi(QWidget):
 
         for Item in DbItens:
             Linha = self.CriarLinhaItem(Item)
-            Linha.setFixedHeight(78)
             self.ListaItensLayout.addWidget(Linha)
 
         self.ListaItensLayout.addStretch()

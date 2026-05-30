@@ -77,7 +77,6 @@ class ReverterUi(QWidget):
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scroll.setWidgetResizable(True)
-        scroll.setFixedHeight(5 * 120)
         scroll.setWidget(self.ScrollContent)
 
         #montar Layout principal
@@ -119,7 +118,6 @@ class ReverterUi(QWidget):
 
         for registro in InventarioFuncionalidade().ItensReverter():
             linha = self.CriarLinha(registro)
-            linha.setFixedHeight(78)
             self.ListaLayout.addWidget(linha)
 
         self.ListaLayout.addStretch()
