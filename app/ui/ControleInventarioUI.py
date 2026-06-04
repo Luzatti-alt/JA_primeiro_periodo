@@ -15,6 +15,7 @@ else:
 
 sys.path.insert(0, str(root))
 from data.Inventario import InventarioFuncionalidade, ControleFuncionario
+from data.docs import ComprovarCadastro
 #endregion base projeto
 
 
@@ -231,13 +232,16 @@ class GerenciadorInventario(QWidget):
             data_descarte=str(self.InputDescarte.date().toPython()),
             data_devolucao=str(self.InputDevolucao.date().toPython()),
         )
+        pasta = _pasta_assinaturas()
+        assinatura = str(pasta / f"{dono}_{data}.png")
         if not self.AreaAssinatura.vazio():
-            pasta = _pasta_assinaturas()
             self.AreaAssinatura.SalvarAssinatura(
                 nome_func=dono,
                 data=data,
-                caminho=str(pasta / f"{dono}_{data}.png"),
+                caminho=assinatura,
             )
+            # trocar para o codigo unico
+        ComprovarCadastro.GerarPDF(assinatura,dono,self.InputTipo.currentText(),ca,ca,data,str(self.InputDescarte.date().toPython()),self.User() or "Sistema",)
         self.IrInventario()
 
     #tela: Remover

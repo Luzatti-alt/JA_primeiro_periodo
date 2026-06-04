@@ -6,3 +6,5 @@ PySide6_Addons               6.10.2
 bcrypt                       5.0.0
 PySide6_Essentials           6.10.2
 matplotlib                     3.9.4
+reportlab                      4.5.1
+pillow                         11.3.0
