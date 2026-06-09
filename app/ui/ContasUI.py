@@ -1,6 +1,6 @@
 #region base projeto
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
+from PySide6.QtCore import Qt,QSize
+from PySide6.QtGui import QFont, QPixmap, QIcon
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QLineEdit, QPushButton, QLabel, QComboBox,
@@ -37,17 +37,27 @@ class Login(QWidget):
 
         # Logo
         logoRow = QHBoxLayout()
-        self.BtnLogo = QPushButton("IMG")#criar logo para isso e trocar para img real
+        pixmap = QPixmap("app/ui/imgs/guindaste.png")
+        pixmap = pixmap.scaled(96, 96, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        IconeBotao = QIcon(pixmap)
+
+
+        self.BtnLogo = QPushButton()
+        self.BtnLogo.setIconSize(QSize(96, 96))
+        self.BtnLogo.setIcon(IconeBotao)#criar logo para isso e trocar para img real
         self.BtnLogo.setFont(font)
         self.BtnLogo.setFlat(True)
         self.BtnLogo.setStyleSheet("border: none; background: transparent;")
         self.BtnLogo.clicked.connect(lambda: self.RegistrarClick("img"))
+
+
         self.BtnNome = QPushButton("Sistema Controle Epi Inteligente")
         self.BtnNome.setFont(font)
         self.BtnNome.setFlat(True)
         self.BtnNome.setStyleSheet("border: none; background: transparent;")
         self.BtnNome.clicked.connect(lambda: self.RegistrarClick("nome"))
-        self.BtnNome.setFont(font)
+
+
         logoRow.addWidget(self.BtnLogo)
         logoRow.addWidget(self.BtnNome)
         Layout.addLayout(logoRow)

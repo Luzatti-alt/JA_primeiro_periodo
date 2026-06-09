@@ -19,7 +19,7 @@ Estruturar o fluxo correto de descarte de Equipamentos de Proteção Individual 
 - **Pesquisa** — filtragem em tempo real por CA, código único, tipo de EPI, dono, data de descarte ou data de devolução
 
 ### CRUD de Itens
-- **Adicionar** — formulário com tipo de EPI (9 tipos disponíveis), CA, responsável (lista de funcionários cadastrados), usos, datas de devolução e descarte, área de assinatura digital do funcionário; gera código único automático; registra `CriadoPor`
+- **Adicionar** — formulário com tipo de EPI (9 tipos disponíveis), CA, responsável (lista de funcionários cadastrados), usos, datas de devolução e descarte, área de assinatura digital do funcionário; gera código único automático; registra `CriadoPor` além de criar uma documentação basica com a assinatura do funcionario
 - **Remover** — soft delete (`Visivel=False`) com agendamento de exclusão permanente em 1 ano (`DataDeletar`); registra no Histórico e na tabela Reverter quem removeu
 - **Editar** — seleção por item (combo ID + dono), preenchimento automático do formulário; atualiza código único; registra estado anterior e novo no Histórico e em Reverter
 - **Descartar** — checkbox por item; registra data de devolução real e quem descartou no Histórico; suporta desfazer o descarte

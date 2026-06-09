@@ -113,6 +113,9 @@ class HistoricoUi(QWidget):
             # tratar lista (ex: usos)
             if isinstance(valor, list):
                 valor = ", ".join(valor)
+            if isinstance(valor, bool):
+                valor = "✔" if valor else "✘"
+
 
             linhas.append(f"{nome}: {valor}")
 
@@ -157,6 +160,6 @@ class HistoricoUi(QWidget):
         Layout.addWidget(Col(f"Item #{Item.IdItemAlterado}", COL_ID))
         Layout.addWidget(Col(Item.TiposAlteracao,             COL_TIPO))
         Layout.addWidget(Col(self.FormatarDictTexto(Item.VersaoAnterior), COL_ANTERIOR))
-        Layout.addWidget(Col(self.FormatarDictTexto(Item.VersaoAtual), COL_ATUAL))
+        Layout.addWidget(Col(self.FormatarDictTexto(Item.VersaoAtual),    COL_ATUAL))
 
         return Container

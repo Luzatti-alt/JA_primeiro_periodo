@@ -1,16 +1,23 @@
 # -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.hooks import collect_all
+
+datas = [('app/ui/imgs', 'app/ui/imgs'), ('app/data', 'app/data'), ('app/data/docs', 'app/data/docs'), ('app/assinaturas', 'app/assinaturas'), ('app/data/docs/comprovantes', 'app/data/docs/comprovantes')]
+binaries = []
+hiddenimports = ['ui.ContasUI', 'ui.ControleInventarioUI', 'ui.InventarioUI', 'ui.HistoricoUI', 'ui.ReverterUI', 'ui.DashBoardUI', 'ui.GerenciarFuncionarioUi', 'ui.ControleFunc', 'data.Inventario', 'data.docs.ComprovarCadastro', 'reportlab', 'matplotlib', 'pillow', 'sqlalchemy', 'sqlalchemy.dialects.sqlite', 'PySide6.QtCore', 'PySide6.QtWidgets', 'bcrypt', 'PySide6.QtGui', 'numpy', 'numpy.core', 'numpy.core._multiarray_umath']
+tmp_ret = collect_all('numpy')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
     ['app\\ui\\main.py'],
     pathex=['.', 'app'],
-    binaries=[],
-    datas=[('app/ui/imgs', 'app/ui/imgs'), ('app/data', 'app/data'), ('app/data', 'app/data/assinaturas')],
-    hiddenimports=['ui.ContasUI', 'ui.ControleInventarioUI', 'ui.InventarioUI', 'ui.HistoricoUI', 'ui.ReverterUI', 'ui.DashBoardUI', 'data.Inventario', 'sqlalchemy', 'sqlalchemy.dialects.sqlite', 'PySide6.QtCore', 'PySide6.QtWidgets', 'bcrypt', 'PySide6.QtGui'],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=['tensorflow'],
     noarchive=False,
     optimize=0,
 )
