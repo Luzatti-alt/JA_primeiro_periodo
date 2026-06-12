@@ -21,6 +21,30 @@ def resource_path(relative_path):
     return str(Path(base) / relative_path)
 #endregion base projeto
 
+# Mapeamento tipo EPI → arquivo de ícone
+_ICONE_EPI: dict[str, str] = {
+    "capacete":           "app/ui/imgs/capacete-icon.png",
+    "luva":               "app/ui/imgs/luva.png",
+    "cinto":              "app/ui/imgs/cinto.png",
+    "bota":               "app/ui/imgs/bota.png",
+    "alabarte":           "app/ui/imgs/alabarte.png",
+    "manquito":           "app/ui/imgs/manquito.png",
+    "oculos":             "app/ui/imgs/oculos.png",
+    "protetor auricolar": "app/ui/imgs/protetor_auricolar.png",
+    "colete refletivo":   "app/ui/imgs/colete_refletivo.png",
+}
+_ICONE_FALLBACK = "app/ui/imgs/capacete-icon.png"
+
+
+def icone_epi(tipo_epi: str) -> "QPixmap":
+    """Retorna o QPixmap correspondente ao tipo de EPI, com fallback."""
+    from PySide6.QtGui import QPixmap
+    caminho = _ICONE_EPI.get((tipo_epi or "").lower(), _ICONE_FALLBACK)
+    pix = QPixmap(resource_path(caminho))
+    if pix.isNull():
+        pix = QPixmap(resource_path(_ICONE_FALLBACK))
+    return pix
+
 class InventarioUi(QWidget):
     PAGESIZE = 30
 
@@ -239,7 +263,7 @@ class InventarioUi(QWidget):
 
         # imagem
         ImgLabel = QLabel()
-        ImgLabel.setPixmap(QPixmap(resource_path('app/ui/imgs/capacete-icon.png')))
+        ImgLabel.setPixmap(icone_epi(Item.TipoEpi))
         ImgLabel.setScaledContents(True)
         ImgLabel.setFixedSize(48, 60)
         ImgLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)

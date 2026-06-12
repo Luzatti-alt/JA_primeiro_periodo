@@ -1,9 +1,10 @@
 #region base projeto
-from PySide6.QtCore import Qt,QSize
+from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QFont, QPixmap, QIcon
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
     QLineEdit, QPushButton, QLabel, QComboBox,
+    QSizePolicy,
 )
 import sys
 from pathlib import Path
@@ -11,11 +12,16 @@ from pathlib import Path
 if getattr(sys, 'frozen', False):
     root = Path(sys._MEIPASS)
 else:
-    root = Path(__file__).parent.parent   # app/ui → app → raiz
+    root = Path(__file__).parent.parent
 
 sys.path.insert(0, str(root))
 from data.Inventario import Contas
 #endregion base projeto
+
+
+def resource_path(relative_path: str) -> str:
+    base = getattr(sys, '_MEIPASS', Path(__file__).parent.parent)
+    return str(Path(base) / relative_path)
 
 
 class Login(QWidget):
@@ -31,55 +37,72 @@ class Login(QWidget):
         self.SetUser        = Usuario
         self.HistoricoClick: list[str] = []
 
-        Layout = QVBoxLayout()
+        OuterLayout = QVBoxLayout()
+        OuterLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        Card = QWidget()
+        Card.setMaximumWidth(420)
+        Card.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+
+        Layout = QVBoxLayout(Card)
+        Layout.setSpacing(12)
+        Layout.setContentsMargins(32, 32, 32, 32)
         Layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         font = QFont("Arial", 20)
 
         # Logo
         logoRow = QHBoxLayout()
-        pixmap = QPixmap("app/ui/imgs/guindaste.png")
-        pixmap = pixmap.scaled(96, 96, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        logoRow.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        caminho_img = resource_path("app/ui/imgs/guindaste.png")
+        pixmap = QPixmap(caminho_img)
+        if not pixmap.isNull():
+            pixmap = pixmap.scaled(96, 96, Qt.AspectRatioMode.KeepAspectRatio,
+                                   Qt.TransformationMode.SmoothTransformation)
         IconeBotao = QIcon(pixmap)
-
 
         self.BtnLogo = QPushButton()
         self.BtnLogo.setIconSize(QSize(96, 96))
-        self.BtnLogo.setIcon(IconeBotao)#criar logo para isso e trocar para img real
-        self.BtnLogo.setFont(font)
+        self.BtnLogo.setIcon(IconeBotao)
         self.BtnLogo.setFlat(True)
         self.BtnLogo.setStyleSheet("border: none; background: transparent;")
         self.BtnLogo.clicked.connect(lambda: self.RegistrarClick("img"))
+        self.BtnLogo.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
-
-        self.BtnNome = QPushButton("Sistema Controle Epi Inteligente")
+        self.BtnNome = QPushButton("EPI Inteligente")
         self.BtnNome.setFont(font)
         self.BtnNome.setFlat(True)
         self.BtnNome.setStyleSheet("border: none; background: transparent;")
         self.BtnNome.clicked.connect(lambda: self.RegistrarClick("nome"))
 
-
         logoRow.addWidget(self.BtnLogo)
         logoRow.addWidget(self.BtnNome)
         Layout.addLayout(logoRow)
+        Layout.addSpacing(8)
 
         self.InputUsuario = QLineEdit()
         self.InputUsuario.setPlaceholderText("Usuário")
+        self.InputUsuario.setMinimumHeight(36)
         Layout.addWidget(self.InputUsuario)
 
         self.InputSenha = QLineEdit()
         self.InputSenha.setPlaceholderText("Senha")
         self.InputSenha.setEchoMode(QLineEdit.EchoMode.Password)
+        self.InputSenha.setMinimumHeight(36)
+        self.InputSenha.returnPressed.connect(self.Logar)
         Layout.addWidget(self.InputSenha)
 
         self.LblErro = QLabel("")
         self.LblErro.setStyleSheet("color: #ff4444;")
+        self.LblErro.setAlignment(Qt.AlignmentFlag.AlignCenter)
         Layout.addWidget(self.LblErro)
 
-        BtnLogar = QPushButton("Logar")
+        BtnLogar = QPushButton("Entrar")
+        BtnLogar.setMinimumHeight(40)
         BtnLogar.clicked.connect(self.Logar)
         Layout.addWidget(BtnLogar)
 
-        self.setLayout(Layout)
+        OuterLayout.addWidget(Card)
+        self.setLayout(OuterLayout)
 
     def Logar(self) -> None:
         usuario = self.InputUsuario.text().strip()
@@ -111,8 +134,10 @@ class Login(QWidget):
         elif sufixo_excluir == self.SEQUENCIA_EXCLUIR:
             self.HistoricoClick = []
             self.IrExcluirConta()
+
+
 class CriarConta(QWidget):
-    #Acessível apenas pela sequência secreta na tela de Login
+    # Acessível apenas pela sequência secreta na tela de Login
 
     def __init__(self, Login):
         super().__init__()
@@ -142,6 +167,10 @@ class CriarConta(QWidget):
         BtnCriar.clicked.connect(self.Cadastrar)
         Layout.addWidget(BtnCriar)
 
+        BtnVoltar = QPushButton("Voltar")
+        BtnVoltar.clicked.connect(self.IrLogin)
+        Layout.addWidget(BtnVoltar)
+
         self.setLayout(Layout)
 
     def Cadastrar(self) -> None:
@@ -162,24 +191,31 @@ class CriarConta(QWidget):
 
 
 class ExcluirContaUI(QWidget):
-    def __init__(self):
+    def __init__(self, Voltar=None):
         super().__init__()
+        self.IrVoltar = Voltar
         layout = QVBoxLayout()
- 
+
         self.ListaContas = QComboBox()
         self.ConstruirComboItens(self.ListaContas)
- 
+
         self.LblErro = QLabel("")
         self.LblErro.setStyleSheet("color: #ff4444;")
- 
+
         self.RemoverFuncionario = QPushButton("Remover conta")
         self.RemoverFuncionario.clicked.connect(self.Remover)
- 
+
         layout.addWidget(self.ListaContas)
         layout.addWidget(self.LblErro)
         layout.addWidget(self.RemoverFuncionario)
+
+        if Voltar:
+            BtnVoltar = QPushButton("Voltar")
+            BtnVoltar.clicked.connect(Voltar)
+            layout.addWidget(BtnVoltar)
+
         self.setLayout(layout)
- 
+
     def Remover(self) -> None:
         usuario = self.ListaContas.currentData()
         if not usuario:
@@ -190,7 +226,7 @@ class ExcluirContaUI(QWidget):
             self.LblErro.setText("")
         else:
             self.LblErro.setText("Erro ao remover conta.")
- 
+
     @staticmethod
     def ConstruirComboItens(combo: QComboBox) -> None:
         combo.clear()

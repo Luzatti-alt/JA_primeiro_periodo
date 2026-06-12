@@ -158,7 +158,7 @@ class GerenciadorJanelas(QWidget):
             GerenciarFuncionarios = self.IrGerenciarFuncionarios,
             Reverter=self.IrReverter
         )
-        self.ExcluirConta = ExcluirContaUI()  
+        self.ExcluirConta = ExcluirContaUI(Voltar=self.IrLogin) 
 
         for tela in (
             self.Login, self.CriarConta,

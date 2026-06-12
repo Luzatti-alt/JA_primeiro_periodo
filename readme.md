@@ -186,7 +186,6 @@ pyinstaller main.spec
 
 ## Backlog / Ideias futuras
 
-- [ ] Gerar PDF de entrega de EPI com assinatura digital do funcionário (NR)
 - [ ] Salvar assinatura digital vinculada ao item no banco de dados
 - [ ] Verificação de código de barras do CA
 - [ ] Trocar ícone do item conforme tipo de EPI
