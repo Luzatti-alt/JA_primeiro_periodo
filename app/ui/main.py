@@ -213,6 +213,7 @@ class GerenciadorJanelas(QWidget):
         self.IrPara(self.Dashboard)
 
     def IrGerenciarFuncionarios(self)-> None:
+        self.GerenciarFuncionarios.AtualizarLista()
         self.IrPara(self.GerenciarFuncionarios)
 
     def IrControleFuncionarios(self,tipo:str)->None:

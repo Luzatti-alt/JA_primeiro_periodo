@@ -84,7 +84,6 @@ class HistoricoUi(QWidget):
             Linha.setFixedHeight(78)
             self.ListaItensLayout.addWidget(Linha)
         self.ListaItensLayout.addStretch()
-        self.ScrollContent.setLayout(self.ListaItensLayout)
         ScrollArea.setWidget(self.ScrollContent)
         HistoricoBaseLayout.addLayout(HisTopoLay)
         HistoricoBaseLayout.addWidget(ScrollArea)

@@ -122,7 +122,6 @@ class InventarioUi(QWidget):
         InventarioBaseLayout = QVBoxLayout()
         #iterando esse Layout para cada item no db
         ItemContainer = QWidget()
-        ItemLinhaLayout = QHBoxLayout(ItemContainer)
         InventarioCentroLayout = QHBoxLayout()
         IdentificacaoLayout = QVBoxLayout()
 
@@ -135,7 +134,7 @@ class InventarioUi(QWidget):
         self.ListaItensLayout.setSpacing(10)
         self.ListaItensLayout.setContentsMargins(0, 0, 0, 0)
         self.ListaItensLayout.addStretch()
-        self.ScrollContent.setLayout(self.ListaItensLayout)
+        
         self.ScrollArea.setWidget(self.ScrollContent)
         # detectar scroll chegando ao fim → carregar mais itens
         self.ScrollArea.verticalScrollBar().valueChanged.connect(self.OnScroll)

@@ -24,7 +24,7 @@ else:
     root = Path(__file__).parent.parent
 
 sys.path.insert(0, str(root))
-from data.Inventario import Contas, InventarioFuncionalidade
+from data.Inventario import Contas, InventarioFuncionalidade,refresh_session
 #endregion base projeto
 
 
@@ -274,7 +274,9 @@ class DashBoardUi(QWidget):
     def __init__(self,GerenciarFuncionarios, Historico, Reverter, Gerenciar, Inventario,
                  inv_func: InventarioFuncionalidade = None):
         super().__init__()
+        
         self._inv_func = InventarioFuncionalidade()
+        self._inv_func._cache_itens = None
         self._dashboard = Dashboard(self._inv_func)
         self._painel_atual = None
         FundoTopo = QWidget()
@@ -298,7 +300,6 @@ class DashBoardUi(QWidget):
         BtnHistorico.clicked.connect(Historico)
         BtnGerenciarFuncionarios = QPushButton("GerenciarFuncionarios")
         BtnGerenciarFuncionarios.clicked.connect(GerenciarFuncionarios)
-
 
         DashBoardTopoLayout = QHBoxLayout(FundoTopo)
         #DashBoardTopoLayout.setAlignment(Qt.AlignTopoLayout.addWidget(AddItem))
@@ -340,14 +341,19 @@ class DashBoardUi(QWidget):
 
     
     def _carregar_donos(self):
-        donos_atuais = set()
-        for i in range(1, self._combo_pessoal.count()):
-            donos_atuais.add(self._combo_pessoal.itemText(i))
-
+        refresh_session()
+        self._inv_func._cache_itens = None
+        selecionado = self._combo_pessoal.currentText()
+        self._combo_pessoal.blockSignals(True)
+        self._combo_pessoal.clear()
+        self._combo_pessoal.addItem("Nenhum funcionario selecionado")
         lista = self._inv_func.RemListaFuncionarios()
-        novos = {dono for _, dono in lista} - donos_atuais
-        for dono in sorted(novos):
-            self._combo_pessoal.addItem(dono)
+        for _, nome in sorted(lista, key=lambda x: x[1]):
+           self._combo_pessoal.addItem(nome)
+        idx = self._combo_pessoal.findText(selecionado)
+        self._combo_pessoal.setCurrentIndex(idx if idx >= 0 else 0)
+        self._combo_pessoal.blockSignals(False)
+
 
     def _trocar_dash(self, tipo: str, dono: str = ""):
         if tipo == "geral":
@@ -366,8 +372,11 @@ class DashBoardUi(QWidget):
 
     # atualização forçada (chamar após qualquer CRUD)
     def atualizar(self):
-        #usa dados recentes do banco.
+        refresh_session()
         self._inv_func._cache_itens = None
+        self._carregar_donos() 
+
+        #usa dados recentes do banco.
         widget = self._scroll.widget()
         if widget:
             # descobre qual aba está aberta pelo título do widget filho (se houver)

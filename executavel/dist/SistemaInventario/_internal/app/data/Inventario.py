@@ -17,6 +17,15 @@ else:
 DbPath = os.path.join(BASE_DIR, "GuindastesRibasDB.db")
 engine = create_engine(f'sqlite:///{DbPath}')
 
+Session = sessionmaker(bind=engine)
+session = Session()
+
+
+def refresh_session():
+    global session
+    session.close()
+    session = Session()
+
 class Contas(Base):
     __tablename__ = 'conta'
     id = Column(Integer, primary_key=True)
@@ -153,25 +162,8 @@ class GerenciadorTemporal():
                 pass
         return alertas
 
-    def ExclusaoVerdadeira(self):
-        """Deleta permanentemente itens invisíveis com DataDeletar vencida (1 ano)."""
-        hoje = date.today()
-        itens = session.query(Itens).filter_by(Visivel=False).all()
-        removidos = 0
-        for item in itens:
-            if item.DataDeletar:
-                try:
-                    data_del = date.fromisoformat(item.DataDeletar)
-                    if hoje >= data_del:
-                        session.delete(item)
-                        removidos += 1
-                except (ValueError, TypeError):
-                    pass
-        if removidos:
-            session.commit()
-        return removidos
-
 class ControleFuncionario():
+    
     def __init__(self):
         pass
     def TotalFuncionarios(self) -> int:
@@ -299,8 +291,8 @@ class InventarioFuncionalidade():
         return session.query(Itens).filter_by(id=ID).first()
 
     def RemListaFuncionarios(self):
-        itens = session.query(Itens).filter_by(Visivel=True).all()
-        return [(item.id, item.Dono) for item in itens]
+        funcs = session.query(Funcionarios).all()
+        return [(f.id, f.Nome) for f in funcs]
 
     def EditListaFuncionarios(self):
         itens = session.query(Itens).filter_by(Visivel=True).all()
@@ -387,7 +379,6 @@ class InventarioFuncionalidade():
         self._cache_itens = None
 
     def RemItem(self, id, registro) -> None:
-        # BUGFIX: era .filter_by(...) sem .first() — query object não tem .Visivel
         item = session.query(Itens).filter_by(id=id).first()
         if not item:
             return
@@ -511,7 +502,7 @@ class InventarioFuncionalidade():
             session.rollback()
             return f"erro ao reverter: {e}"
 
-
+#region dashboard
     def DadosDashboard(self) -> dict:
         """
         Agrega tudo que o Dashboard precisa em um único dict,
@@ -613,7 +604,7 @@ class InventarioFuncionalidade():
             "atrasos":    atrasos,
             "em_dia":     em_dia,
         }
-
+#rendegion dashboard
 # criar sessão ANTES de usar
 Session = sessionmaker(bind=engine)
 session = Session()
